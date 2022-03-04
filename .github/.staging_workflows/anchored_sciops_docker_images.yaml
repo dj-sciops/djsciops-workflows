@@ -112,7 +112,7 @@ jobs:
       repo_name: ${{steps.compile_env.outputs.repo_name}}
   publish_env_image:
     !!merge <<: *$STAGE-if
-    needs: [get_meta, build_env_image]
+    needs: [build_env_image]
     runs-on: ubuntu-latest
     env:
       JHUB_VER: ${{inputs.jhub_ver}}
@@ -159,7 +159,6 @@ jobs:
   ## Build/Publish standard worker
   build_worker_image:
     runs-on: ubuntu-latest
-    needs: get_meta
     env:
       PY_VER: ${{inputs.py_ver}}
       DIST: ${{inputs.dist}}
@@ -199,7 +198,7 @@ jobs:
       repo_name: ${{steps.compile_worker.outputs.repo_name}}
   publish_worker_image:
     !!merge <<: *$STAGE-if
-    needs: [get_meta, build_worker_image]
+    needs: [build_worker_image]
     runs-on: ubuntu-latest
     env:
       PY_VER: ${{inputs.py_ver}}
