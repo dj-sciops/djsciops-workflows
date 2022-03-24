@@ -74,9 +74,7 @@ jobs:
     if: |
       github.event_name == 'push' &&
       startsWith(github.ref, 'refs/tags') &&
-      (github.repository_owner == 'dj-sciops' ||
-       github.repository_owner == 'datajoint' ||
-       github.repository_owner == 'datajoint-company')
+      github.repository_owner == 'dj-sciops'
     needs: [build_env_image]
     runs-on: ubuntu-latest
     env:
@@ -144,9 +142,7 @@ jobs:
     if: |
       github.event_name == 'push' &&
       startsWith(github.ref, 'refs/tags') &&
-      (github.repository_owner == 'dj-sciops' ||
-       github.repository_owner == 'datajoint' ||
-       github.repository_owner == 'datajoint-company')
+      github.repository_owner == 'dj-sciops'
     needs: [build_worker_image]
     runs-on: ubuntu-latest
     env:
