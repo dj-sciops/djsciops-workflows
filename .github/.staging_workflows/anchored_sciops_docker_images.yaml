@@ -184,7 +184,7 @@ jobs:
           cd ../
           docker save \
             -o image-standard-${REPO_NAME}-py${PY_VER}-${DIST}-v${WORKFLOW_VERSION}.tar \
-            "registry.vathes.com/sciops/standard-${REPO_NAME}:py${PY_VER}-${DIST}-v${WORKFLOW_VERSION}"
+            "registry.vathes.com/${{github.repository_owner}}/standard-${REPO_NAME}:py${PY_VER}-${DIST}-v${WORKFLOW_VERSION}"
           gzip -S ".gz" image-standard-${REPO_NAME}-py${PY_VER}-${DIST}-v${WORKFLOW_VERSION}.tar
       - name: Add standard worker image archive to Artifact
         uses: actions/upload-artifact@v2
@@ -231,7 +231,7 @@ jobs:
         !!merge <<: *docker-login
       - name: Push image
         run: |
-          export IMAGE=registry.vathes.com/sciops/standard-${{needs.build_worker_image.outputs.repo_name}}
+          export IMAGE=registry.vathes.com/${{github.repository_owner}}/standard-${{needs.build_worker_image.outputs.repo_name}}
           export TAG=py${{env.PY_VER}}-${{env.DIST}}-v${{env.WORKFLOW_VERSION}}
           docker push "${IMAGE}:${TAG}"
           docker tag "${IMAGE}:${TAG}" "${IMAGE}:${TAG}--${GITHUB_SHA:0:7}"
