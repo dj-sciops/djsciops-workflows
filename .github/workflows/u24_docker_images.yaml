@@ -60,7 +60,7 @@ jobs:
           cd ../
           docker save \
             -o image-codebook-${REPO_NAME}-jhub${JHUB_VER}-py${PY_VER}-${DIST}-v${WORKFLOW_VERSION}.tar \
-            "registry.vathes.com/datajoint/codebook-${REPO_NAME}:jhub${JHUB_VER}-py${PY_VER}-${DIST}-v${WORKFLOW_VERSION}"
+            "registry.vathes.com/${{github.repository_owner}}/codebook-${REPO_NAME}:jhub${JHUB_VER}-py${PY_VER}-${DIST}-v${WORKFLOW_VERSION}"
           gzip -S ".gz" image-codebook-${REPO_NAME}-jhub${JHUB_VER}-py${PY_VER}-${DIST}-v${WORKFLOW_VERSION}.tar
       - name: Add codebook env image archive to Artifact
         uses: actions/upload-artifact@v2
@@ -109,7 +109,7 @@ jobs:
           password: ${{ secrets.REGISTRY_PASSWORD }}
       - name: Push image
         run: |-
-          export IMAGE=registry.vathes.com/datajoint/codebook-${{needs.build_env_image.outputs.repo_name}}
+          export IMAGE=registry.vathes.com/${{github.repository_owner}}/codebook-${{needs.build_env_image.outputs.repo_name}}
           export TAG=jhub${{env.JHUB_VER}}-py${{env.PY_VER}}-${{env.DIST}}-v${{env.WORKFLOW_VERSION}}
           docker push "${IMAGE}:${TAG}"
           docker tag "${IMAGE}:${TAG}" "${IMAGE}:${TAG}--${GITHUB_SHA:0:7}"
