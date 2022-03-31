@@ -19,6 +19,12 @@ on:
       dist:
         required: true
         type: string
+      env_base_hash:
+        required: true
+        type: string
+      worker_base_hash:
+        required: true
+        type: string
       workflow_version:
         required: true
         type: string
@@ -76,6 +82,7 @@ jobs:
       JHUB_VER: ${{inputs.jhub_ver}}
       PY_VER: ${{inputs.py_ver}}
       DIST: ${{inputs.dist}}
+      ENV_BASE_HASH: ${{inputs.env_base_hash}}
       WORKFLOW_VERSION: ${{inputs.workflow_version}}
     steps:
       - uses: actions/checkout@v2
@@ -116,7 +123,7 @@ jobs:
           export IMAGE=registry.vathes.com/sciops/codebook-${{github.repository}}
           export TAG=jhub${{env.JHUB_VER}}-py${{env.PY_VER}}-${{env.DIST}}-v${{env.WORKFLOW_VERSION}}
           docker push "${IMAGE}:${TAG}"
-          docker tag "${IMAGE}:${TAG}" "${IMAGE}:${TAG}--${GITHUB_SHA:0:7}"
+          docker tag "${IMAGE}:${TAG}" "${IMAGE}:${TAG}-${GITHUB_SHA:0:7}"
           docker push "${IMAGE}:${TAG}-${GITHUB_SHA:0:7}"
           [ "$PY_VER" == "3.8" ] && [ "$DISTRO" == "alpine" ] \
                   && docker tag "${IMAGE}:${TAG}" "${IMAGE}:latest" \
@@ -176,6 +183,7 @@ jobs:
     env:
       PY_VER: ${{inputs.py_ver}}
       DIST: ${{inputs.dist}}
+      WORKER_BASE_HASH: ${{inputs.worker_base_hash}} 
       WORKFLOW_VERSION: ${{inputs.workflow_version}}
     steps:
       - uses: actions/checkout@v2
@@ -216,7 +224,7 @@ jobs:
           export IMAGE=registry.vathes.com/${{github.repository_owner}}/standard-${{github.repository}}
           export TAG=py${{env.PY_VER}}-${{env.DIST}}-v${{env.WORKFLOW_VERSION}}
           docker push "${IMAGE}:${TAG}"
-          docker tag "${IMAGE}:${TAG}" "${IMAGE}:${TAG}--${GITHUB_SHA:0:7}"
+          docker tag "${IMAGE}:${TAG}" "${IMAGE}:${TAG}-${GITHUB_SHA:0:7}"
           docker push "${IMAGE}:${TAG}-${GITHUB_SHA:0:7}"
           [ "$PY_VER" == "3.8" ] && [ "$DISTRO" == "alpine" ] \
                   && docker tag "${IMAGE}:${TAG}" "${IMAGE}:latest" \
