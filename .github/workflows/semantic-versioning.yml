@@ -47,7 +47,7 @@ jobs:
 
       - name: 🏷️  Get semantic version tag
         id: semver_tag
-        uses: ./.github/actions/semver-info
+        uses: iamamutt/djsciops-cicd/.github/actions/semver-info
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
     outputs:
