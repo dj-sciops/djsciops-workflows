@@ -77,7 +77,7 @@ jobs:
           key: ${{ runner.os }}-nox-pythons
 
       - name: 🐍  Setup nox
-        uses: excitedleigh/setup-nox@v2
+        uses: ./.github/actions/nox-python
 
       - name: 🐍  Bump python package version
         run: |
