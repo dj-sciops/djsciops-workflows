@@ -17,6 +17,9 @@ on:
       dist:
         required: true
         type: string
+      env_base_hash:
+        required: true
+        type: string
       workflow_version:
         required: true
         type: string
@@ -38,6 +41,7 @@ jobs:
       JHUB_VER: ${{inputs.jhub_ver}}
       PY_VER: ${{inputs.py_ver}}
       DIST: ${{inputs.dist}}
+      ENV_BASE_IMAGE: ${{inputs.env_base_image}}
       WORKFLOW_VERSION: ${{inputs.workflow_version}}
     steps:
       - uses: actions/checkout@v2
@@ -81,6 +85,7 @@ jobs:
       JHUB_VER: ${{inputs.jhub_ver}}
       PY_VER: ${{inputs.py_ver}}
       DIST: ${{inputs.dist}}
+      ENV_BASE_IMAGE: ${{inputs.env_base_image}}
       WORKFLOW_VERSION: ${{inputs.workflow_version}}
     steps:
       - name: Fetch image archive from Artifact
@@ -112,7 +117,7 @@ jobs:
           export IMAGE=registry.vathes.com/${{github.repository_owner}}/codebook-${{needs.build_env_image.outputs.repo_name}}
           export TAG=jhub${{env.JHUB_VER}}-py${{env.PY_VER}}-${{env.DIST}}-${{env.WORKFLOW_VERSION}}
           docker push "${IMAGE}:${TAG}"
-          docker tag "${IMAGE}:${TAG}" "${IMAGE}:${TAG}--${GITHUB_SHA:0:7}"
+          docker tag "${IMAGE}:${TAG}" "${IMAGE}:${TAG}-${GITHUB_SHA:0:7}"
           docker push "${IMAGE}:${TAG}-${GITHUB_SHA:0:7}"
           [ "$PY_VER" == "3.8" ] && [ "$DISTRO" == "alpine" ] \
                   && docker tag "${IMAGE}:${TAG}" "${IMAGE}:latest" \
