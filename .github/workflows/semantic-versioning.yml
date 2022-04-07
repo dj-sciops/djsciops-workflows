@@ -104,7 +104,6 @@ jobs:
         uses: actions/setup-python@v3
         with:
           python-version: ${{ inputs.py_ver }}
-          cache: "pip"
 
       - name: 🐍  Install Nox
         id: install-nox
