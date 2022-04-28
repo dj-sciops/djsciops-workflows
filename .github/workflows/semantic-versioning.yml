@@ -1,0 +1,175 @@
+# Tasks that require semantic versioning info
+name: semantic-versioning
+on:
+  workflow_call:
+    inputs:
+      py_ver:
+        description: "which python version to use, e.g., '3.9'"
+        required: false
+        type: string
+        default: "3.9"
+      create_release:
+        description: "Create a new release"
+        default: true
+        type: boolean
+        required: false
+      release_only:
+        description: "List of single-quoted, comma separated values of release types, e.g., ['major','minor']"
+        default: "['major','minor','patch']"
+        type: string
+        required: false
+
+    outputs:
+      new_tag:
+        description: "New tag with the 'v' prefix"
+        value: ${{ jobs.get_version.outputs.new_tag }}
+      new_version:
+        description: "New version without the prefix"
+        value: ${{ jobs.get_version.outputs.new_version }}
+      previous_tag:
+        description: "Previous tag with the 'v' prefix"
+        value: ${{ jobs.get_version.outputs.previous_tag }}
+      previous_version:
+        description: "Previous version without the prefix"
+        value: ${{ jobs.get_version.outputs.previous_version }}
+      release_type:
+        description: "Release type for new version"
+        value: ${{ jobs.get_version.outputs.release_type }}
+      changelog:
+        description: "Changelog generated from commits"
+        value: ${{ jobs.get_version.outputs.changelog }}
+      repo_lower:
+        description: "Repository name but lowercase"
+        value: ${{ jobs.get_version.outputs.repo_lower }}
+      datetime:
+        description: "Datetime when action was used"
+        value: ${{ jobs.get_version.outputs.datetime }}
+      id:
+        description: "The identifier of the created release"
+        value: ${{ jobs.create_tag_and_release.outputs.id }}
+      html_url:
+        description: "The HTML URL of the release"
+        value: ${{ jobs.create_tag_and_release.outputs.html_url }}
+      upload_url:
+        description: "The URL for uploading assets to the release"
+        value: ${{ jobs.create_tag_and_release.outputs.upload_url }}
+
+jobs:
+  get_version:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🛎️  Checkout repository
+        id: check-repo
+        uses: actions/checkout@v3
+
+      - id: set-datetime
+        run: echo "::set-output name=datetime::$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+        shell: bash
+
+      - id: set-repo-lower
+        run: echo "::set-output name=repo_lower::$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')"
+        shell: bash
+
+      - name: 🏷️  Get new semantic version string
+        id: semver_tag
+        uses: mathieudutour/github-tag-action@v6.0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          release_branches: master,main
+          pre_release_branches: develop
+          fetch_all_tags: true
+          dry_run: true
+
+    outputs:
+      new_tag: ${{ steps.semver_tag.outputs.new_tag }}
+      new_version: ${{ steps.semver_tag.outputs.new_version }}
+      previous_tag: ${{ steps.semver_tag.outputs.previous_tag }}
+      previous_version: ${{ steps.semver_tag.outputs.previous_version }}
+      release_type: ${{ steps.semver_tag.outputs.release_type }}
+      changelog: ${{ steps.semver_tag.outputs.changelog }}
+      repo_lower: ${{ steps.semver_tag.outputs.repo_lower }}
+      datetime: ${{ steps.semver_tag.outputs.datetime }}
+
+  push_version_file:
+    needs: get_version
+    if: always() && needs.get_version.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🛎️  Checkout repository
+        id: check-repo
+        uses: actions/checkout@v3
+
+      - name: 🐍  Use Python
+        id: use-python
+        uses: actions/setup-python@v3
+        with:
+          python-version: ${{ inputs.py_ver }}
+
+      - name: 🐍  Install Nox
+        id: install-nox
+        shell: bash
+        run: |
+          python -m pip install --upgrade pip
+          pip install nox
+
+      - name: 🐍  Bump python package version
+        run: |
+          nox --non-interactive -v -s write_version -- --pversion ${{ needs.get_version.outputs.previous_version }} --version ${{ needs.get_version.outputs.new_version }}
+          if [ -z "$(git status --porcelain)" ]; then
+            echo "No change in existing 'version.py' file."
+            exit 0
+          fi
+          echo -e "::debug::Committing and pushing:\n$(git status --porcelain)"
+          git commit -m "ci(versioning): write ver ${{ needs.get_version.outputs.new_version }} to 'version.py'"
+          git push origin HEAD:main
+
+    outputs:
+      python-version: ${{ steps.use-python.outputs.python-version }}
+
+  create_tag_and_release:
+    needs: [push_version_file, get_version]
+    if: always() && needs.push_version_file.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🛎️  Checkout repository
+        id: check-repo
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: 🏷️  Create and push a new semver tag
+        id: push-new-tag
+        shell: bash
+        run: |
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+          git tag -a ${{ needs.get_version.outputs.new_tag }} --force -m "ci(versioning): tagging ${{ needs.get_version.outputs.new_tag }}:${{ inputs.release_type }}"
+          git push origin --tags
+
+      - name: 📦  Create a new release from semver tag
+        id: release-version
+        if: |
+          always() &&
+          (inputs.create_release == 'true') &&
+          (!contains('pre', ${{ needs.get_version.outputs.release_type }})) &&
+          (contains(fromJSON(${{ inputs.release_only }}), ${{ needs.get_version.outputs.release_type }}))
+        uses: ncipollo/release-action@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ needs.get_version.outputs.new_tag }}
+          name: ${{ needs.get_version.outputs.release_type }} release ${{ needs.get_version.outputs.new_version }}
+          body: ${{ needs.get_version.outputs.changelog }}
+          allowUpdates: true
+          generateReleaseNotes: true
+
+    outputs:
+      id: ${{ steps.release-version.outputs.id }}
+      html_url: ${{ steps.release-version.outputs.html_url }}
+      upload_url: ${{ steps.release-version.outputs.upload_url }}
+
+  if_run_tests_failed:
+    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo "The 'run-tests' workflow failed or did not run. Skipping 'semantic-versioning' workflow."
