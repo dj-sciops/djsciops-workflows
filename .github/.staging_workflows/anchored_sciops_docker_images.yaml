@@ -102,8 +102,7 @@ jobs:
 
           ## Get build info
           cd ./main/docker/codebook_env
-          export REPO_NAME=$(echo ${{github.repository}} | awk -F\/ '{print $2}')
-          echo "::set-output name=repo_name::${REPO_NAME}"
+          export REPO_NAME=${{github.event.repository.name}}
           export REPO_OWNER=${{github.repository_owner}}
 
           echo "${{secrets.RAW_DEPLOY_KEY}}" | base64 -di >> ${REPO_NAME}-deploy.pem
@@ -167,8 +166,7 @@ jobs:
 
           ## Get build info
           cd ./main/docker/standard_worker
-          export REPO_NAME=$(echo ${{github.repository}} | awk -F\/ '{print $2}')
-          echo "::set-output name=repo_name::${REPO_NAME}"
+          export REPO_NAME=${{github.event.repository.name}}
           export REPO_OWNER=${{github.repository_owner}}
 
           echo "${{secrets.RAW_DEPLOY_KEY}}" | base64 -di >> ${REPO_NAME}-deploy.pem
