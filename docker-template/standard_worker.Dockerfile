@@ -7,11 +7,11 @@ ARG DEPLOY_KEY
 COPY --chown=anaconda $DEPLOY_KEY $HOME/.ssh/id_ed25519
 RUN chmod 400 $HOME/.ssh/id_ed25519 && \
     printf "ssh\ngit" >> /tmp/apt_requirements.txt && \
-    /entrypoint.sh echo "installed" && \
-    ssh-keyscan github.com >> $HOME/.ssh/known_hosts
+    /entrypoint.sh echo "installed"
 
 ARG REPO_OWNER
 ARG REPO_NAME
 WORKDIR $HOME
-RUN git clone git@github.com:${REPO_OWNER}/${REPO_NAME}.git && \
+RUN ssh-keyscan github.com >> $HOME/.ssh/known_hosts && \
+    git clone git@github.com:${REPO_OWNER}/${REPO_NAME}.git && \
     pip install ./${REPO_NAME}
