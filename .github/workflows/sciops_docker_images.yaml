@@ -57,13 +57,14 @@ jobs:
       - id: compile_env
         name: Compile codebook env image
         run: |
+          ## Get docker template
           cp -r ./cicd/docker-template/* ./main/docker/
-          ls ./main/docker
-          # ## Get build info
-          # cd ./docker
-          # export REPO_NAME=$(echo ${{github.repository}} | awk -F\/ '{print $2}')
-          # echo "::set-output name=repo_name::${REPO_NAME}"
-          # export REPO_OWNER=${{github.repository_owner}}
+
+          ## Get build info
+          cd ./docker
+          export REPO_NAME=$(echo ${{github.repository}} | awk -F\/ '{print $2}')
+          echo "::set-output name=repo_name::${REPO_NAME}"
+          export REPO_OWNER=${{github.repository_owner}}
 
           # echo "${{secrets.RAW_DEPLOY_KEY}}" | base64 -di >> ${REPO_NAME}-deploy.pem
           # chmod 400 ${REPO_NAME}-deploy.pem
