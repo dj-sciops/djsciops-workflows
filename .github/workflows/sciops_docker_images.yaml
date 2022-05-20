@@ -47,14 +47,19 @@ jobs:
       ENV_BASE_HASH: ${{inputs.env_base_hash}}
       WORKFLOW_VERSION: ${{inputs.workflow_version}}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
+        with:
+          path: 'workflow'
       - uses: actions/checkout@v3
         with:
           repository: 'dj-sciops/djsciops-cicd'
+          path: 'cicd'
       - id: compile_env
         name: Compile codebook env image
         run: |
-          ls
+          ls workflow
+          echo "===="
+          ls cicd
           # ## Get build info
           # cd ./docker
           # export REPO_NAME=$(echo ${{github.repository}} | awk -F\/ '{print $2}')
