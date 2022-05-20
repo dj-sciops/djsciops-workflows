@@ -4,8 +4,8 @@ services:
   codebook_env:
     build:
       # only necessary if rebuilding image
-      context: ..
-      dockerfile: ./docker/codebook.Dockerfile
+      context: .
+      dockerfile: codebook.Dockerfile
       args:
         - JHUB_VER
         - PY_VER
