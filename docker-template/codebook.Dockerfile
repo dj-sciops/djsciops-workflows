@@ -10,7 +10,7 @@ FROM datajoint/djlabhub:${JHUB_VER}-py${PY_VER}-${DIST}-${ENV_BASE_HASH}
 ARG DEPLOY_KEY
 COPY --chown=anaconda $DEPLOY_KEY $HOME/.ssh/id_ed25519
 RUN chmod 400 $HOME/.ssh/id_ed25519 && \
-    printf "ssh\ngit" >> /tmp/apt_requirements.txt && \
+    printf "openssh\ngit" >> /tmp/apt_requirements.txt && \
     /entrypoint.sh echo "installed"
 
 ARG REPO_OWNER
