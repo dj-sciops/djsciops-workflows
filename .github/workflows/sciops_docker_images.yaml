@@ -63,7 +63,7 @@ jobs:
           cp -r ./cicd/docker-template/* ./main/docker/
 
           ## Get build info
-          cd ./main/docker
+          cd ./main/docker/codebook_env
           export REPO_NAME=$(echo ${{github.repository}} | awk -F\/ '{print $2}')
           echo "::set-output name=repo_name::${REPO_NAME}"
           export REPO_OWNER=${{github.repository_owner}}
@@ -73,7 +73,7 @@ jobs:
           export DEPLOY_KEY=${REPO_NAME}-deploy.pem
 
           ## Build image
-          docker-compose -f docker-compose-codebook_env.yaml build
+          docker-compose -f dist/${DIST}/docker-compose-codebook_env.yaml build
 
           # cd ../
           # docker save \
@@ -130,7 +130,7 @@ jobs:
           cp -r ./cicd/docker-template/* ./main/docker/
 
           ## Get build info
-          cd ./main/docker
+          cd ./main/docker/standard_worker
           export REPO_NAME=$(echo ${{github.repository}} | awk -F\/ '{print $2}')
           echo "::set-output name=repo_name::${REPO_NAME}"
           export REPO_OWNER=${{github.repository_owner}}
@@ -140,7 +140,7 @@ jobs:
           export DEPLOY_KEY=${REPO_NAME}-deploy.pem
 
           ## Build image
-          docker-compose -f docker-compose-standard_worker.yaml build
+          docker-compose -f dist/${DIST}/docker-compose-standard_worker.yaml build
 
           # cd ../
           # docker save \
