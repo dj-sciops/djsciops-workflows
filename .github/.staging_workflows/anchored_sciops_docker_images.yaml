@@ -91,11 +91,13 @@ jobs:
       - uses: actions/checkout@v3
         with:
           repository: 'dj-sciops/djsciops-cicd'
-          path: 'djsciops-cicd'
+          path: 'cicd'
       - id: compile_env
         name: Compile codebook env image
         run: |
-          ls
+          ls workflow
+          echo "===="
+          ls cicd
           # ## Get build info
           # cd ./docker
           # export REPO_NAME=$(echo ${{github.repository}} | awk -F\/ '{print $2}')
