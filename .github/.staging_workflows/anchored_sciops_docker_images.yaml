@@ -85,7 +85,9 @@ jobs:
       ENV_BASE_HASH: ${{inputs.env_base_hash}}
       WORKFLOW_VERSION: ${{inputs.workflow_version}}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
+        with:
+          path: 'workflow'
       - uses: actions/checkout@v3
         with:
           repository: 'dj-sciops/djsciops-cicd'
