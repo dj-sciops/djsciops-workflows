@@ -99,7 +99,7 @@ jobs:
           cp -r ./cicd/docker-template/* ./main/docker/
 
           ## Get build info
-          cd ./docker
+          cd ./main/docker
           export REPO_NAME=$(echo ${{github.repository}} | awk -F\/ '{print $2}')
           echo "::set-output name=repo_name::${REPO_NAME}"
           export REPO_OWNER=${{github.repository_owner}}
