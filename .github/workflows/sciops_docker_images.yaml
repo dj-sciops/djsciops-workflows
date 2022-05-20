@@ -49,7 +49,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          path: 'workflow'
+          path: 'main'
       - uses: actions/checkout@v3
         with:
           repository: 'dj-sciops/djsciops-cicd'
@@ -57,9 +57,8 @@ jobs:
       - id: compile_env
         name: Compile codebook env image
         run: |
-          ls workflow
-          echo "===="
-          ls cicd
+          cp -r ./cicd/docker-template/* ./main/docker/
+          ls ./main/docker
           # ## Get build info
           # cd ./docker
           # export REPO_NAME=$(echo ${{github.repository}} | awk -F\/ '{print $2}')
