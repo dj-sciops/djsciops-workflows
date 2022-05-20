@@ -52,7 +52,7 @@ jobs:
           path: 'main'
       - uses: actions/checkout@v3
         with:
-          repository: 'dj-sciops/djsciops-cicd'
+          repository: 'yambottle/djsciops-cicd'
           path: 'cicd'
       - id: compile_env
         name: Compile codebook env image
