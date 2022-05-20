@@ -9,13 +9,13 @@ FROM datajoint/djlabhub:${JHUB_VER}-py${PY_VER}-${DIST}-${ENV_BASE_HASH}
 
 ARG DEPLOY_KEY
 COPY --chown=anaconda $DEPLOY_KEY $HOME/.ssh/id_ed25519
-RUN chmod 400 $HOME/.ssh/id_ed25519 && \
-    ssh-keyscan -t ed25519 github.com >> $HOME/.ssh/known_hosts
+RUN chmod 400 $HOME/.ssh/id_ed25519 
 
 ARG REPO_OWNER
 ARG REPO_NAME
 WORKDIR /tmp
-RUN git clone git@github.com:${REPO_OWNER}/${REPO_NAME}.git && \
+RUN ssh-keyscan -t ed25519 github.com >> $HOME/.ssh/known_hosts && \
+    git clone git@github.com:${REPO_OWNER}/${REPO_NAME}.git && \
     pip install ./${REPO_NAME} && \
     cp -r ./${REPO_NAME}/notebooks/ /home/ && \
     cp -r ./${REPO_NAME}/images/ /home/notebooks/ && \
