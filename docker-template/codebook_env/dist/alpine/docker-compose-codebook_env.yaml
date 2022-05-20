@@ -14,5 +14,4 @@ services:
         - DEPLOY_KEY
         - REPO_OWNER
         - REPO_NAME
-    env_file: ../../.env
     image: registry.vathes.com/sciops/codebook_${REPO_NAME}:jhub${JHUB_VER}-py${PY_VER}-${DIST}-${WORKFLOW_VERSION}
