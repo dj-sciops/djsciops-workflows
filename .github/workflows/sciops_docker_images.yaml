@@ -113,9 +113,16 @@ jobs:
           ## Get build info
           cd ./docker
 
+          export REPO_NAME=${{github.event.repository.name}}
+          export REPO_OWNER=${{github.repository_owner}}
+
+          echo "${{secrets.RAW_DEPLOY_KEY}}" | base64 -di >> ${REPO_NAME}-deploy.pem
+          chmod 400 ${REPO_NAME}-deploy.pem
+          export DEPLOY_KEY=${REPO_NAME}-deploy.pem
+
           ## Build workers
           find . -maxdepth 1 -type d \( -iname "*" ! -iname "*gpu*" \) | tail -n1 | cut -d/ -f2 | xargs -I {} bash -c  \
-          "cd {} && set -a && source build.env && echo '${{secrets.RAW_DEPLOY_KEY}}' | base64 -di >> ${REPO_NAME}-deploy.pem && chmod 400 ${REPO_NAME}-deploy.pem && docker-compose -f dist/${DIST}/docker-compose-{}.yaml build && set +a"
+          "cd {} && set -a && cp ${REPO_NAME}-deploy.pem . && source build.env && docker-compose -f dist/${DIST}/docker-compose-{}.yaml build && set +a"
 
           # cd ../
           # docker save \
