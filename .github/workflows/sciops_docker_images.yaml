@@ -115,7 +115,7 @@ jobs:
 
           ## Build workers
           find . -maxdepth 1 -type d \( -iname "*" ! -iname "*gpu*" \) | tail -n2 | cut -d/ -f2 | xargs -I {} bash -c  \
-          "cd {} && echo '${{secrets.RAW_DEPLOY_KEY}}'' | base64 -di >> ${REPO_NAME}-deploy.pem && chmod 400 ${REPO_NAME}-deploy.pem && set -a && source build.env && docker-compose -f dist/${DIST}/docker-compose-{}.yaml build && set +a"
+          "cd {} && echo '${{secrets.RAW_DEPLOY_KEY}}' | base64 -di >> ${REPO_NAME}-deploy.pem && chmod 400 ${REPO_NAME}-deploy.pem && set -a && source build.env && docker-compose -f dist/${DIST}/docker-compose-{}.yaml build && set +a"
 
           # cd ../
           # docker save \
