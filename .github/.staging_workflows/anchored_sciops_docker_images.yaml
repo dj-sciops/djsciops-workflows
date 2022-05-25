@@ -159,7 +159,7 @@ jobs:
           export DEPLOY_KEY=${REPO_NAME}-deploy.pem
 
           ## Build workers
-          find . -maxdepth 1 -type d \( -iname "*" ! -iname "*gpu*" \) | tail -n1 | cut -d/ -f2 | xargs -I {} bash -c  \
+          find . -maxdepth 1 -type d \( -iname "*" ! -iname "*local*" \) | tail -n1 | cut -d/ -f2 | xargs -I {} bash -c  \
           "cd {} && set -a && cp ../${REPO_NAME}-deploy.pem . && source build.env && docker-compose -f dist/${DIST}/docker-compose-{}.yaml build && set +a"
 
           # cd ../
