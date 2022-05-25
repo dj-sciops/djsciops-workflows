@@ -159,8 +159,13 @@ jobs:
           export DEPLOY_KEY=${REPO_NAME}-deploy.pem
 
           ## Build workers
-          find . -maxdepth 1 -type d \( -iname "*" ! -iname "*local*" \) | tail -n1 | cut -d/ -f2 | xargs -I {} bash -c  \
-          "cd {} && set -a && cp ../${REPO_NAME}-deploy.pem . && source build.env && docker-compose -f dist/${DIST}/docker-compose-{}.yaml build && set +a"
+          find . -maxdepth 1 -type d \( -iname "*" ! -iname "*local*" \) | awk "NR>1" | cut -d/ -f2 | xargs -I {} bash -c \
+          "cd {} && \
+           set -a && \
+           cp ../${REPO_NAME}-deploy.pem . && \
+           source build.env && \
+           docker-compose -f dist/${DIST}/docker-compose-{}.yaml build && \
+           set +a"
 
           # cd ../
           # docker save \
@@ -178,14 +183,29 @@ jobs:
       - name: Login to vathes Registry
         uses: docker/login-action@v1
         !!merge <<: *docker-login
-      # - name: Push image
-      #   run: |
-      #     export IMAGE=registry.vathes.com/sciops/standard_${{github.event.repository.name}}
-      #     export TAG=py${{env.PY_VER}}-${{env.DIST}}-${{env.WORKFLOW_VERSION}}
-      #     docker push "${IMAGE}:${TAG}"
-      #     docker tag "${IMAGE}:${TAG}" "${IMAGE}:${TAG}-${GITHUB_SHA:0:7}"
-      #     docker push "${IMAGE}:${TAG}-${GITHUB_SHA:0:7}"
-      #     [ "$PY_VER" == "3.8" ] && [ "$DISTRO" == "alpine" ] \
-      #             && docker tag "${IMAGE}:${TAG}" "${IMAGE}:latest" \
-      #             && docker push "${IMAGE}:latest" \
-      #         || echo "skipping 'latest' tag..."
+      - name: Push image
+        run: |
+          find . -maxdepth 1 -type d \( -iname "*" ! -iname "*local*" \) | awk "NR>1" | cut -d/ -f2 | xargs -I {} bash -c \
+          "cd {} && \
+           set -a && \
+           source build.env && \
+           grep image: ./dist/${DIST}/docker-compose-{}.yaml | envsubst | sed 's/image://' | tr -d ' '" >> /tmp/image_list
+          
+          cat /tmp/image_list | xargs -I {} bash -c \
+          "export IMAGE=$(echo {} | awk -F: '{print $1}') && \
+           export TAG=$(echo {} | awk -F: '{print $2}') && \
+           docker push "${IMAGE}:${TAG}" && \
+           docker tag "${IMAGE}:${TAG}" "${IMAGE}:${TAG}-${GITHUB_SHA:0:7}" && \
+           docker push "${IMAGE}:${TAG}-${GITHUB_SHA:0:7}" && \
+           [ "$PY_VER" == "3.8" ] && [ "$DISTRO" == "alpine" ] \
+                  && docker tag "${IMAGE}:${TAG}" "${IMAGE}:latest" \
+                  && docker push "${IMAGE}:latest" \
+              || echo "skipping 'latest' tag..."
+
+          # docker push "${IMAGE}:${TAG}"
+          # docker tag "${IMAGE}:${TAG}" "${IMAGE}:${TAG}-${GITHUB_SHA:0:7}"
+          # docker push "${IMAGE}:${TAG}-${GITHUB_SHA:0:7}"
+          # [ "$PY_VER" == "3.8" ] && [ "$DISTRO" == "alpine" ] \
+          #         && docker tag "${IMAGE}:${TAG}" "${IMAGE}:latest" \
+          #         && docker push "${IMAGE}:latest" \
+          #     || echo "skipping 'latest' tag..."
