@@ -149,28 +149,4 @@ jobs:
           username: ${{ secrets.REGISTRY_USERNAME }}
           password: ${{ secrets.REGISTRY_PASSWORD }}
       - name: Push image
-        run: |-
-          find . -maxdepth 1 -type d \( -iname "*" ! -iname "*local*" \) | awk "NR>1" | cut -d/ -f2 | xargs -I {} bash -c \
-          "cd {} && \
-           set -a && \
-           source build.env && \
-           grep image: ./dist/${DIST}/docker-compose-{}.yaml | envsubst | sed 's/image://' | tr -d ' '" >> /tmp/image_list
-
-          cat /tmp/image_list | xargs -I {} bash -c \
-          "export IMAGE=$(echo {} | awk -F: '{print $1}') && \
-           export TAG=$(echo {} | awk -F: '{print $2}') && \
-           docker push "${IMAGE}:${TAG}" && \
-           docker tag "${IMAGE}:${TAG}" "${IMAGE}:${TAG}-${GITHUB_SHA:0:7}" && \
-           docker push "${IMAGE}:${TAG}-${GITHUB_SHA:0:7}" && \
-           [ "$PY_VER" == "3.8" ] && [ "$DISTRO" == "alpine" ] \
-                  && docker tag "${IMAGE}:${TAG}" "${IMAGE}:latest" \
-                  && docker push "${IMAGE}:latest" \
-              || echo "skipping 'latest' tag..."
-
-          # docker push "${IMAGE}:${TAG}"
-          # docker tag "${IMAGE}:${TAG}" "${IMAGE}:${TAG}-${GITHUB_SHA:0:7}"
-          # docker push "${IMAGE}:${TAG}-${GITHUB_SHA:0:7}"
-          # [ "$PY_VER" == "3.8" ] && [ "$DISTRO" == "alpine" ] \
-          #         && docker tag "${IMAGE}:${TAG}" "${IMAGE}:latest" \
-          #         && docker push "${IMAGE}:latest" \
-          #     || echo "skipping 'latest' tag..."
+        run: "pwd\nls \n\nfind . -maxdepth 1 -type d \\( -iname \"*\" ! -iname \"*local*\" \\) | awk \"NR>1\" | cut -d/ -f2 | xargs -I {} bash -c \\\n\"cd {} && \\\n set -a && \\\n source build.env && \\\n grep image: ./dist/${DIST}/docker-compose-{}.yaml | envsubst | sed 's/image://' | tr -d ' '\" >> /tmp/image_list\n\ncat /tmp/image_list | xargs -I {} bash -c \\\n\"export IMAGE=$(echo {} | awk -F: '{print $1}') && \\\n export TAG=$(echo {} | awk -F: '{print $2}') && \\\n docker push \"${IMAGE}:${TAG}\" && \\\n docker tag \"${IMAGE}:${TAG}\" \"${IMAGE}:${TAG}-${GITHUB_SHA:0:7}\" && \\\n docker push \"${IMAGE}:${TAG}-${GITHUB_SHA:0:7}\" && \\\n [ \"$PY_VER\" == \"3.8\" ] && [ \"$DISTRO\" == \"alpine\" ] \\\n        && docker tag \"${IMAGE}:${TAG}\" \"${IMAGE}:latest\" \\\n        && docker push \"${IMAGE}:latest\" \\\n    || echo \"skipping 'latest' tag...\"\n\n# docker push \"${IMAGE}:${TAG}\"\n# docker tag \"${IMAGE}:${TAG}\" \"${IMAGE}:${TAG}-${GITHUB_SHA:0:7}\"\n# docker push \"${IMAGE}:${TAG}-${GITHUB_SHA:0:7}\"\n# [ \"$PY_VER\" == \"3.8\" ] && [ \"$DISTRO\" == \"alpine\" ] \\\n#         && docker tag \"${IMAGE}:${TAG}\" \"${IMAGE}:latest\" \\\n#         && docker push \"${IMAGE}:latest\" \\\n#     || echo \"skipping 'latest' tag...\""

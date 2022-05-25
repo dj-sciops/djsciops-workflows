@@ -185,6 +185,9 @@ jobs:
         !!merge <<: *docker-login
       - name: Push image
         run: |
+          pwd
+          ls 
+          
           find . -maxdepth 1 -type d \( -iname "*" ! -iname "*local*" \) | awk "NR>1" | cut -d/ -f2 | xargs -I {} bash -c \
           "cd {} && \
            set -a && \
