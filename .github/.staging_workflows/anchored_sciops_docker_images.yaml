@@ -129,12 +129,15 @@ jobs:
         run: |
           export IMAGE=registry.vathes.com/sciops/codebook_${{github.event.repository.name}}
           export TAG=jhub${{env.JHUB_VER}}-py${{env.PY_VER}}-${{env.DIST}}-${{env.WORKFLOW_VERSION}}
+          echo ${IMAGE} ${TAG}
           docker push "${IMAGE}:${TAG}"
           docker tag "${IMAGE}:${TAG}" "${IMAGE}:${TAG}-${GITHUB_SHA:0:7}"
           docker push "${IMAGE}:${TAG}-${GITHUB_SHA:0:7}"
+          echo $PY_VER $DIST
           [ "${PY_VER}" == "3.9" ] && [ "${DIST}" == "alpine" ] \
                   && docker tag "${IMAGE}:${TAG}" "${IMAGE}:latest" \
                   && docker push "${IMAGE}:latest" \
+                  && echo "pushed 'latest' tag..."
               || echo "skipping 'latest' tag..."
   
   ## Build/Publish standard worker
@@ -206,6 +209,6 @@ jobs:
               [ "${PY_VER}" == "3.9" ] && [ "${DIST}" == "alpine" ] \
                       && docker tag "${IMAGE}:${TAG}" "${IMAGE}:latest" \
                       && docker push "${IMAGE}:latest" \
-                      && echo "pushed 'latest' tag" \
+                      && echo "pushed 'latest' tag..." \
                   || echo "skipping 'latest' tag..."
           done < /tmp/image_list
