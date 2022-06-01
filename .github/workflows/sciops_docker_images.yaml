@@ -157,7 +157,13 @@ jobs:
            set -a && \
            source build.env && \
            grep image: ./dist/${DIST}/docker-compose-{}.yaml | envsubst | sed 's/image://' | tr -d ' '" >> /tmp/image_list
-          cat /tmp/image_list
+
+          while read line;
+          do
+              export IMAGE=$(echo $line | awk -F: '{print $1}');
+              export TAG=$(echo $line | awk -F: '{print $2}');
+              echo $IMAGE $TAG;
+          done < /tmp/image_list
 
           # cat /tmp/image_list | xargs -I {} bash -c \
           # "export IMAGE=$(echo {} | awk -F: '{print $1}') && \
