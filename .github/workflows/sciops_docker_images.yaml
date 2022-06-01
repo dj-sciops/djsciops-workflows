@@ -51,7 +51,7 @@ jobs:
       - name: Checkout cicd repo that has common docker template
         uses: actions/checkout@v3
         with:
-          repository: 'yambottle/djsciops-cicd'
+          repository: 'dj-sciops/djsciops-cicd'
           path: 'cicd'
       - id: build_env
         name: Build codebook env image
