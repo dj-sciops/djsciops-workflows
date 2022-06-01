@@ -102,7 +102,7 @@ jobs:
           [ "${PY_VER}" == "3.9" ] && [ "${DIST}" == "alpine" ] \
                   && docker tag "${IMAGE}:${TAG}" "${IMAGE}:latest" \
                   && docker push "${IMAGE}:latest" \
-                  && echo "pushed 'latest' tag..."
+                  && echo "pushed 'latest' tag..." \
               || echo "skipping 'latest' tag..."
   ## Build/Publish standard worker
   build_worker_image:
