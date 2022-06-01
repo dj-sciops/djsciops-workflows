@@ -198,6 +198,14 @@ jobs:
               export IMAGE=$(echo $line | awk -F: '{print $1}');
               export TAG=$(echo $line | awk -F: '{print $2}');
               echo $IMAGE $TAG;
+              docker push "${IMAGE}:${TAG}"
+              docker tag "${IMAGE}:${TAG}" "${IMAGE}:${TAG}-${GITHUB_SHA:0:7}"
+              docker push "${IMAGE}:${TAG}-${GITHUB_SHA:0:7}"
+              [ "$PY_VER" == "3.9" ] && [ "$DISTRO" == "alpine" ] \
+                      && docker tag "${IMAGE}:${TAG}" "${IMAGE}:latest" \
+                      && docker push "${IMAGE}:latest" \
+                      && echo "pushed 'latest' tag" \
+                  || echo "skipping 'latest' tag..."
           done < /tmp/image_list
 
           # cat /tmp/image_list | xargs -I {} bash -c \
