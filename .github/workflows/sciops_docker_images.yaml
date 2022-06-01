@@ -53,8 +53,8 @@ jobs:
         with:
           repository: 'yambottle/djsciops-cicd'
           path: 'cicd'
-      - id: compile_env
-        name: Compile codebook env image
+      - id: build_env
+        name: Build codebook env image
         run: |
           ## Get docker template
           cp -r ./cicd/docker-template/* ./main/docker/
@@ -90,7 +90,7 @@ jobs:
           registry: registry.vathes.com
           username: ${{ secrets.REGISTRY_USERNAME }}
           password: ${{ secrets.REGISTRY_PASSWORD }}
-      - name: Push image
+      - name: Push codebook image
         run: |
           export IMAGE=registry.vathes.com/sciops/codebook_${{github.event.repository.name}}
           export TAG=jhub${{env.JHUB_VER}}-py${{env.PY_VER}}-${{env.DIST}}-${{env.WORKFLOW_VERSION}}
@@ -105,7 +105,7 @@ jobs:
                   && echo "pushed 'latest' tag..." \
               || echo "skipping 'latest' tag..."
   ## Build/Publish standard worker
-  build_worker_image:
+  build_worker_images:
     runs-on: ubuntu-latest
     env:
       PY_VER: ${{inputs.py_ver}}
@@ -113,8 +113,8 @@ jobs:
     steps:
       - name: Checkout workflow repo
         uses: actions/checkout@v3
-      - id: compile_workers
-        name: Compile workers
+      - id: build_workers
+        name: Build worker images
         run: |
           ## Get build info
           cd ./docker
@@ -152,7 +152,7 @@ jobs:
           registry: registry.vathes.com
           username: ${{ secrets.REGISTRY_USERNAME }}
           password: ${{ secrets.REGISTRY_PASSWORD }}
-      - name: Push image
+      - name: Push worker images
         run: |-
           cd ./docker
 
