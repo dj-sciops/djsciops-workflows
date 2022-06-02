@@ -165,14 +165,11 @@ jobs:
               cd ${dir};
               set -a;
               source build.env;
-              grep image: ./dist/${DIST}/docker-compose-${dir}.yaml | \
-                envsubst | sed 's/image://' | tr -d ' '" >> /tmp/image_list;
-          done
+              IMAGE_TAG=grep image: ./dist/${DIST}/docker-compose-${dir}.yaml | \
+                envsubst | sed 's/image://' | tr -d ' '"
 
-          while read line;
-          do
-              export IMAGE=$(echo $line | awk -F: '{print $1}');
-              export TAG=$(echo $line | awk -F: '{print $2}');
+              export IMAGE=$(echo ${IMAGE_TAG} | awk -F: '{print $1}');
+              export TAG=$(echo ${IMAGE_TAG} | awk -F: '{print $2}');
               echo $IMAGE $TAG;
               docker push "${IMAGE}:${TAG}"
               docker tag "${IMAGE}:${TAG}" "${IMAGE}:${TAG}-${GITHUB_SHA:0:7}"
@@ -183,4 +180,4 @@ jobs:
                       && docker push "${IMAGE}:latest" \
                       && echo "pushed 'latest' tag..." \
                   || echo "skipping 'latest' tag..."
-          done < /tmp/image_list
+          done
