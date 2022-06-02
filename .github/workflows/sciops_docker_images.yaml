@@ -51,7 +51,7 @@ jobs:
       - name: Checkout cicd repo that has common docker template
         uses: actions/checkout@v3
         with:
-          repository: 'dj-sciops/djsciops-cicd'
+          repository: 'yambottle/djsciops-cicd'
           path: 'cicd'
       - id: build_env
         name: Build codebook env image
@@ -160,11 +160,14 @@ jobs:
         run: |-
           cd ./docker
 
-          find . -maxdepth 1 -type d \( -iname "*" ! -iname "*local*" \) | awk "NR>1" | cut -d/ -f2 | xargs -I {} bash -c \
-          "cd {} && \
-           set -a && \
-           source build.env && \
-           grep image: ./dist/${DIST}/docker-compose-{}.yaml | envsubst | sed 's/image://' | tr -d ' '" >> /tmp/image_list
+          find . -maxdepth 1 -type d \( -iname "*" ! -iname "*local*" \) | awk "NR>1" | cut -d/ -f2 | while read dir;
+          do
+              cd ${dir};
+              set -a;
+              source build.env;
+              grep image: ./dist/${DIST}/docker-compose-${dir}.yaml | \
+                envsubst | sed 's/image://' | tr -d ' '" >> /tmp/image_list;
+          done
 
           while read line;
           do
