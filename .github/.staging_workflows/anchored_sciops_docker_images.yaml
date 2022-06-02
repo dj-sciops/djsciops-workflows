@@ -40,27 +40,33 @@ on:
 ## must use anchors as "$STAGE-*" in order to normalize as dev-*, prod-*. Unless for common anchors
 
 ### For act testing locally
-anchor-dev-if: &dev-if
+anchor-dev-push: &dev-push
   if: |
     github.event_name == 'push' &&
     startsWith(github.ref, 'refs/tags') &&
     github.repository_owner == 'yambottle'
+anchor-dev-cicd-repo: &dev-cicd-repo
+  repository: 'yambottle/djsciops-cicd'
 anchor-prod-artifact-retention: &dev-retention
   retention-days: 1
 ### For Github Action run in your own fork with release
-anchor-test-if: &test-if
+anchor-test-push: &test-push
   if: |
     github.event_name == 'push' &&
     startsWith(github.ref, 'refs/tags') &&
     github.repository_owner == 'yambottle'
+anchor-test-cicd-repo: &test-cicd-repo
+  repository: 'yambottle/djsciops-cicd'
 anchor-test-artifact-retention: &test-retention
   retention-days: 1
 ### For Github Action run in dj-sciops
-anchor-prod-if: &prod-if
+anchor-prod-push: &prod-push
   if: |
     github.event_name == 'push' &&
     startsWith(github.ref, 'refs/tags') &&
     github.repository_owner == 'dj-sciops'
+anchor-prod-cicd-repo: &prod-cicd-repo
+  repository: 'dj-sciops/djsciops-cicd'
 anchor-prod-artifact-retention: &prod-retention
   retention-days: 90
 ### Common Anchor
@@ -89,7 +95,7 @@ jobs:
       - name: Checkout cicd repo that has common docker template
         uses: actions/checkout@v3
         with:
-          repository: 'yambottle/djsciops-cicd'
+          !!merge <<: *$STAGE-cicd-repo
           path: 'cicd'
       - id: build_env
         name: Build codebook env image
@@ -126,7 +132,7 @@ jobs:
         uses: docker/login-action@v1
         !!merge <<: *docker-login
       - name: Push codebook image
-        !!merge <<: *$STAGE-if
+        !!merge <<: *$STAGE-push
         run: |
           export IMAGE=registry.vathes.com/sciops/codebook_${{github.event.repository.name}}
           export TAG=jhub${{env.JHUB_VER}}-py${{env.PY_VER}}-${{env.DIST}}-${{env.WORKFLOW_VERSION}}
@@ -191,7 +197,7 @@ jobs:
         uses: docker/login-action@v1
         !!merge <<: *docker-login
       - name: Push worker images
-        !!merge <<: *$STAGE-if
+        !!merge <<: *$STAGE-push
         run: |
           cd ./docker
 
