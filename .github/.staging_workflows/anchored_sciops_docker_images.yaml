@@ -199,7 +199,7 @@ jobs:
               set -a;
               source build.env;
               IMAGE_TAG=grep image: ./dist/${DIST}/docker-compose-${dir}.yaml | \
-                envsubst | sed 's/image://' | tr -d ' '"
+                envsubst | sed 's/image://' | tr -d ' '
 
               export IMAGE=$(echo ${IMAGE_TAG} | awk -F: '{print $1}');
               export TAG=$(echo ${IMAGE_TAG} | awk -F: '{print $2}');
