@@ -29,7 +29,7 @@ on:
         required: true
         type: string
     secrets:
-      RAW_DEPLOY_KEY:
+      BOT_SSH_KEY:
         required: true
       REGISTRY_USERNAME:
         required: true
@@ -108,7 +108,7 @@ jobs:
           export REPO_NAME=${{github.event.repository.name}}
           export REPO_OWNER=${{github.repository_owner}}
 
-          echo "${{secrets.RAW_DEPLOY_KEY}}" | base64 -di >> ${REPO_NAME}-deploy.pem
+          echo "${{secrets.BOT_SSH_KEY}}" | base64 -di >> ${REPO_NAME}-deploy.pem
           chmod u=r,g-rwx,o-rwx ${REPO_NAME}-deploy.pem
           export DEPLOY_KEY=${REPO_NAME}-deploy.pem
 
@@ -165,7 +165,7 @@ jobs:
           export REPO_NAME=${{github.event.repository.name}}
           export REPO_OWNER=${{github.repository_owner}}
 
-          echo "${{secrets.RAW_DEPLOY_KEY}}" | base64 -di >> ${REPO_NAME}-deploy.pem
+          echo "${{secrets.BOT_SSH_KEY}}" | base64 -di >> ${REPO_NAME}-deploy.pem
           chmod u=r,g-rwx,o-rwx ${REPO_NAME}-deploy.pem
           export DEPLOY_KEY=${REPO_NAME}-deploy.pem
 
