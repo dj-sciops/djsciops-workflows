@@ -127,13 +127,13 @@ jobs:
           export DEPLOY_KEY=${REPO_NAME}-deploy.pem
 
           ## Build workers
-          find . -maxdepth 1 -type d \( -iname "*" ! -iname "*local*" \) | awk "NR>1" | cut -d/ -f2 | while read dir;
+          find . -maxdepth 1 -type d \( -iname "*" ! -iname "*local*" \) | awk "NR>1" | cut -d/ -f2 | while read DIR;
           do
-              cd ${dir};
+              cd ${DIR};
               set -a;
               cp ../${REPO_NAME}-deploy.pem . ;
               source build.env;
-              docker-compose -f dist/${DIST}/docker-compose-${dir}.yaml build;
+              docker-compose -f dist/${DIST}/docker-compose-${DIR}.yaml build;
               set +a;
           done
 
@@ -160,13 +160,13 @@ jobs:
         run: |-
           cd ./docker
 
-          find . -maxdepth 1 -type d \( -iname "*" ! -iname "*local*" \) | awk "NR>1" | cut -d/ -f2 | while read dir;
+          find . -maxdepth 1 -type d \( -iname "*" ! -iname "*local*" \) | awk "NR>1" | cut -d/ -f2 | while read DIR;
           do
-              cd ${dir};
+              cd ${DIR};
               set -a;
               source build.env;
-              IMAGE_TAG=grep image: ./dist/${DIST}/docker-compose-${dir}.yaml | \
-                envsubst | sed 's/image://' | tr -d ' '
+              IMAGE_TAG=$(grep image: ./dist/${DIST}/docker-compose-${DIR}.yaml | \
+                envsubst | sed 's/image://' | tr -d ' ')
 
               export IMAGE=$(echo ${IMAGE_TAG} | awk -F: '{print $1}');
               export TAG=$(echo ${IMAGE_TAG} | awk -F: '{print $2}');
