@@ -9,7 +9,7 @@ FROM datajoint/djlabhub:${JHUB_VER}-py${PY_VER}-${DIST}-${CODEBOOK_BASE_HASH}
 
 ARG DEPLOY_KEY
 COPY --chown=anaconda $DEPLOY_KEY $HOME/.ssh/id_ed25519
-RUN chmod 400 $HOME/.ssh/id_ed25519 && \
+RUN chmod u=r,g-rwx,o-rwx $HOME/.ssh/id_ed25519 && \
     printf "ssh\ngit" >> /tmp/apt_requirements.txt && \
     /entrypoint.sh echo "installed"
 
