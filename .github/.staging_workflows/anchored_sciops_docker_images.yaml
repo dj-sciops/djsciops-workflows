@@ -126,6 +126,7 @@ jobs:
         uses: docker/login-action@v1
         !!merge <<: *docker-login
       - name: Push codebook image
+        !!merge <<: *$STAGE-if
         run: |
           export IMAGE=registry.vathes.com/sciops/codebook_${{github.event.repository.name}}
           export TAG=jhub${{env.JHUB_VER}}-py${{env.PY_VER}}-${{env.DIST}}-${{env.WORKFLOW_VERSION}}
@@ -190,6 +191,7 @@ jobs:
         uses: docker/login-action@v1
         !!merge <<: *docker-login
       - name: Push worker images
+        !!merge <<: *$STAGE-if
         run: |
           cd ./docker
 

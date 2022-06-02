@@ -91,6 +91,10 @@ jobs:
           username: ${{ secrets.REGISTRY_USERNAME }}
           password: ${{ secrets.REGISTRY_PASSWORD }}
       - name: Push codebook image
+        if: |
+          github.event_name == 'push' &&
+          startsWith(github.ref, 'refs/tags') &&
+          github.repository_owner == 'yambottle'
         run: |
           export IMAGE=registry.vathes.com/sciops/codebook_${{github.event.repository.name}}
           export TAG=jhub${{env.JHUB_VER}}-py${{env.PY_VER}}-${{env.DIST}}-${{env.WORKFLOW_VERSION}}
@@ -157,6 +161,10 @@ jobs:
           username: ${{ secrets.REGISTRY_USERNAME }}
           password: ${{ secrets.REGISTRY_PASSWORD }}
       - name: Push worker images
+        if: |
+          github.event_name == 'push' &&
+          startsWith(github.ref, 'refs/tags') &&
+          github.repository_owner == 'yambottle'
         run: |-
           cd ./docker
 
