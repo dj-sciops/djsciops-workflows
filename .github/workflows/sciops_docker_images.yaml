@@ -17,10 +17,7 @@ on:
       dist:
         required: true
         type: string
-      env_base_hash:
-        required: true
-        type: string
-      worker_base_hash:
+      codebook_base_hash:
         required: true
         type: string
       workflow_version:
@@ -30,7 +27,7 @@ on:
         required: true
         type: string
     secrets:
-      RAW_DEPLOY_KEY:
+      BOT_SSH_KEY:
         required: true
       REGISTRY_USERNAME:
         required: true
@@ -38,31 +35,41 @@ on:
         required: true
 jobs:
   ## Build/Publish codebook env image
-  build_env_image:
+  build_codebook_image:
     runs-on: ubuntu-latest
     env:
       JHUB_VER: ${{inputs.jhub_ver}}
       PY_VER: ${{inputs.py_ver}}
       DIST: ${{inputs.dist}}
-      ENV_BASE_HASH: ${{inputs.env_base_hash}}
+      CODEBOOK_BASE_HASH: ${{inputs.codebook_base_hash}}
       WORKFLOW_VERSION: ${{inputs.workflow_version}}
     steps:
-      - uses: actions/checkout@v2
-      - id: compile_env
-        name: Compile codebook env image
+      - name: Checkout workflow repo
+        uses: actions/checkout@v3
+        with:
+          path: 'main'
+      - name: Checkout cicd repo that has common docker template
+        uses: actions/checkout@v3
+        with:
+          repository: 'dj-sciops/djsciops-cicd'
+          path: 'cicd'
+      - id: build_env
+        name: Build codebook env image
         run: |
+          ## Get docker template
+          cp -r ./cicd/docker-template/* ./main/docker/
+
           ## Get build info
-          cd ./docker
-          export REPO_NAME=$(echo ${{github.repository}} | awk -F\/ '{print $2}')
-          echo "::set-output name=repo_name::${REPO_NAME}"
+          cd ./main/docker/codebook_env
+          export REPO_NAME=${{github.event.repository.name}}
           export REPO_OWNER=${{github.repository_owner}}
 
-          echo "${{secrets.RAW_DEPLOY_KEY}}" | base64 -di >> ${REPO_NAME}-deploy.pem
-          chmod 400 ${REPO_NAME}-deploy.pem
+          echo "${{secrets.BOT_SSH_KEY}}" | base64 -di >> ${REPO_NAME}-deploy.pem
+          chmod u=r,g-rwx,o-rwx ${REPO_NAME}-deploy.pem
           export DEPLOY_KEY=${REPO_NAME}-deploy.pem
 
           ## Build image
-          docker-compose -f docker-compose-codebook_env.yaml build
+          docker-compose -f dist/${DIST}/docker-compose-codebook_env.yaml build
 
           # cd ../
           # docker save \
@@ -83,90 +90,56 @@ jobs:
           registry: registry.vathes.com
           username: ${{ secrets.REGISTRY_USERNAME }}
           password: ${{ secrets.REGISTRY_PASSWORD }}
-      - name: Push image
+      - name: Push codebook image
+        if: |
+          github.event_name == 'push' &&
+          startsWith(github.ref, 'refs/tags') &&
+          github.repository_owner == 'dj-sciops'
         run: |
-          export IMAGE=registry.vathes.com/sciops/codebook-${{github.repository}}
+          export IMAGE=registry.vathes.com/sciops/codebook_${{github.event.repository.name}}
           export TAG=jhub${{env.JHUB_VER}}-py${{env.PY_VER}}-${{env.DIST}}-${{env.WORKFLOW_VERSION}}
+          echo ${IMAGE} ${TAG}
           docker push "${IMAGE}:${TAG}"
           docker tag "${IMAGE}:${TAG}" "${IMAGE}:${TAG}-${GITHUB_SHA:0:7}"
           docker push "${IMAGE}:${TAG}-${GITHUB_SHA:0:7}"
-          [ "$PY_VER" == "3.8" ] && [ "$DISTRO" == "alpine" ] \
+          echo $PY_VER $DIST
+          [ "${PY_VER}" == "3.9" ] && [ "${DIST}" == "alpine" ] \
                   && docker tag "${IMAGE}:${TAG}" "${IMAGE}:latest" \
                   && docker push "${IMAGE}:latest" \
+                  && echo "pushed 'latest' tag..." \
               || echo "skipping 'latest' tag..."
-    outputs:
-      repo_name: ${{steps.compile_env.outputs.repo_name}}
-  # publish_env_image:
-  #   !!merge <<: *prod-if
-  #   needs: [build_env_image]
-  #   runs-on: ubuntu-latest
-  #   env:
-  #     JHUB_VER: ${{inputs.jhub_ver}}
-  #     PY_VER: ${{inputs.py_ver}}
-  #     DIST: ${{inputs.dist}}
-  #     WORKFLOW_VERSION: ${{inputs.workflow_version}}
-  #   steps:
-  #     - name: Fetch image archive from Artifact
-  #       uses: actions/download-artifact@v2
-  #       with:
-  #         name: "image-codebook-${{needs.build_env_image.outputs.repo_name}}\
-  #           -jhub${{env.JHUB_VER}}-py${{env.PY_VER}}-${{env.DIST}}-${{env.WORKFLOW_VERSION}}"
-  #     - name: Upload image archive to Release
-  #       uses: actions/upload-release-asset@v1
-  #       env:
-  #         GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-  #       with:
-  #         upload_url: ${{inputs.release_upload_url}}
-  #         asset_path: "image-codebook-${{needs.build_env_image.outputs.repo_name}}\
-  #           -jhub${{env.JHUB_VER}}-py${{env.PY_VER}}-${{env.DIST}}-${{env.WORKFLOW_VERSION}}.tar.gz"
-  #         asset_name: "image-codebook-${{needs.build_env_image.outputs.repo_name}}\
-  #           -jhub${{env.JHUB_VER}}-py${{env.PY_VER}}-${{env.DIST}}-${{env.WORKFLOW_VERSION}}.tar.gz"
-  #         asset_content_type: application/gzip
-  #     - name: Load image archive to docker
-  #       run: |
-  #         ## If you local machine is not the same as the "runs-on", this step would fail: invalid tar header
-  #         docker load \
-  #           -i "image-codebook-${{needs.build_env_image.outputs.repo_name}}-jhub${{env.JHUB_VER}}-py${{env.PY_VER}}-${{env.DIST}}-${{env.WORKFLOW_VERSION}}.tar.gz"
-  #     - name: Login to vathes Registry
-  #       uses: docker/login-action@v1
-  #       !!merge <<: *docker-login
-  #     - name: Push image
-  #       run: |
-  #         export IMAGE=registry.vathes.com/sciops/codebook-${{needs.build_env_image.outputs.repo_name}}
-  #         export TAG=jhub${{env.JHUB_VER}}-py${{env.PY_VER}}-${{env.DIST}}-${{env.WORKFLOW_VERSION}}
-  #         docker push "${IMAGE}:${TAG}"
-  #         docker tag "${IMAGE}:${TAG}" "${IMAGE}:${TAG}--${GITHUB_SHA:0:7}"
-  #         docker push "${IMAGE}:${TAG}-${GITHUB_SHA:0:7}"
-  #         [ "$PY_VER" == "3.8" ] && [ "$DISTRO" == "alpine" ] \
-  #                 && docker tag "${IMAGE}:${TAG}" "${IMAGE}:latest" \
-  #                 && docker push "${IMAGE}:latest" \
-  #             || echo "skipping 'latest' tag..."
-
   ## Build/Publish standard worker
-  build_worker_image:
+  build_worker_images:
     runs-on: ubuntu-latest
     env:
       PY_VER: ${{inputs.py_ver}}
       DIST: ${{inputs.dist}}
-      WORKER_BASE_HASH: ${{inputs.worker_base_hash}}
-      WORKFLOW_VERSION: ${{inputs.workflow_version}}
     steps:
-      - uses: actions/checkout@v2
-      - id: compile_worker
-        name: Compile codebook worker image
+      - name: Checkout workflow repo
+        uses: actions/checkout@v3
+      - id: build_workers
+        name: Build worker images
         run: |
           ## Get build info
           cd ./docker
-          export REPO_NAME=$(echo ${{github.repository}} | awk -F\/ '{print $2}')
-          echo "::set-output name=repo_name::${REPO_NAME}"
+
+          export REPO_NAME=${{github.event.repository.name}}
           export REPO_OWNER=${{github.repository_owner}}
 
-          echo "${{secrets.RAW_DEPLOY_KEY}}" | base64 -di >> ${REPO_NAME}-deploy.pem
-          chmod 400 ${REPO_NAME}-deploy.pem
+          echo "${{secrets.BOT_SSH_KEY}}" | base64 -di >> ${REPO_NAME}-deploy.pem
+          chmod u=r,g-rwx,o-rwx ${REPO_NAME}-deploy.pem
           export DEPLOY_KEY=${REPO_NAME}-deploy.pem
 
-          ## Build image
-          docker-compose -f docker-compose-standard_worker.yaml build
+          ## Build workers
+          find . -maxdepth 1 -type d \( -iname "*" ! -iname "*local*" \) | awk "NR>1" | cut -d/ -f2 | while read DIR;
+          do
+              cd ${DIR};
+              set -a;
+              cp ../${REPO_NAME}-deploy.pem . ;
+              source build.env;
+              docker-compose -f dist/${DIST}/docker-compose-${DIR}.yaml build;
+              set +a;
+          done
 
           # cd ../
           # docker save \
@@ -187,60 +160,32 @@ jobs:
           registry: registry.vathes.com
           username: ${{ secrets.REGISTRY_USERNAME }}
           password: ${{ secrets.REGISTRY_PASSWORD }}
-      - name: Push image
-        run: |
-          export IMAGE=registry.vathes.com/${{github.repository_owner}}/standard-${{github.repository}}
-          export TAG=py${{env.PY_VER}}-${{env.DIST}}-${{env.WORKFLOW_VERSION}}
-          docker push "${IMAGE}:${TAG}"
-          docker tag "${IMAGE}:${TAG}" "${IMAGE}:${TAG}-${GITHUB_SHA:0:7}"
-          docker push "${IMAGE}:${TAG}-${GITHUB_SHA:0:7}"
-          [ "$PY_VER" == "3.8" ] && [ "$DISTRO" == "alpine" ] \
-                  && docker tag "${IMAGE}:${TAG}" "${IMAGE}:latest" \
-                  && docker push "${IMAGE}:latest" \
-              || echo "skipping 'latest' tag..."
-    outputs:
-      repo_name: ${{steps.compile_worker.outputs.repo_name}}
-  # publish_worker_image:
-  #   !!merge <<: *prod-if
-  #   needs: [build_worker_image]
-  #   runs-on: ubuntu-latest
-  #   env:
-  #     PY_VER: ${{inputs.py_ver}}
-  #     DIST: ${{inputs.dist}}
-  #     WORKFLOW_VERSION: ${{inputs.workflow_version}}
-  #   steps:
-  #     - name: Fetch image archive from Artifact
-  #       uses: actions/download-artifact@v2
-  #       with:
-  #         name: "image-standard-${{needs.build_worker_image.outputs.repo_name}}\
-  #           -py${{env.PY_VER}}-${{env.DIST}}-${{env.WORKFLOW_VERSION}}"
-  #     - name: Upload image archive to Release
-  #       uses: actions/upload-release-asset@v1
-  #       env:
-  #         GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-  #       with:
-  #         upload_url: ${{inputs.release_upload_url}}
-  #         asset_path: "image-standard-${{needs.build_worker_image.outputs.repo_name}}\
-  #           -py${{env.PY_VER}}-${{env.DIST}}-${{env.WORKFLOW_VERSION}}.tar.gz"
-  #         asset_name: "image-standard-${{needs.build_worker_image.outputs.repo_name}}\
-  #           -py${{env.PY_VER}}-${{env.DIST}}-${{env.WORKFLOW_VERSION}}.tar.gz"
-  #         asset_content_type: application/gzip
-  #     - name: Load image archive to docker
-  #       run: |
-  #         ## If you local machine is not the same as the "runs-on", this step would fail: invalid tar header
-  #         docker load \
-  #           -i "image-standard-${{needs.build_worker_image.outputs.repo_name}}-py${{env.PY_VER}}-${{env.DIST}}-${{env.WORKFLOW_VERSION}}.tar.gz"
-  #     - name: Login to vathes Registry
-  #       uses: docker/login-action@v1
-  #       !!merge <<: *docker-login
-  #     - name: Push image
-  #       run: |
-  #         export IMAGE=registry.vathes.com/${{github.repository_owner}}/standard-${{needs.build_worker_image.outputs.repo_name}}
-  #         export TAG=py${{env.PY_VER}}-${{env.DIST}}-${{env.WORKFLOW_VERSION}}
-  #         docker push "${IMAGE}:${TAG}"
-  #         docker tag "${IMAGE}:${TAG}" "${IMAGE}:${TAG}--${GITHUB_SHA:0:7}"
-  #         docker push "${IMAGE}:${TAG}-${GITHUB_SHA:0:7}"
-  #         [ "$PY_VER" == "3.8" ] && [ "$DISTRO" == "alpine" ] \
-  #                 && docker tag "${IMAGE}:${TAG}" "${IMAGE}:latest" \
-  #                 && docker push "${IMAGE}:latest" \
-  #             || echo "skipping 'latest' tag..."
+      - name: Push worker images
+        if: |
+          github.event_name == 'push' &&
+          startsWith(github.ref, 'refs/tags') &&
+          github.repository_owner == 'dj-sciops'
+        run: |-
+          cd ./docker
+
+          find . -maxdepth 1 -type d \( -iname "*" ! -iname "*local*" \) | awk "NR>1" | cut -d/ -f2 | while read DIR;
+          do
+              cd ${DIR};
+              set -a;
+              source build.env;
+              IMAGE_TAG=$(grep image: ./dist/${DIST}/docker-compose-${DIR}.yaml | \
+                envsubst | sed 's/image://' | tr -d ' ')
+
+              export IMAGE=$(echo ${IMAGE_TAG} | awk -F: '{print $1}');
+              export TAG=$(echo ${IMAGE_TAG} | awk -F: '{print $2}');
+              echo $IMAGE $TAG;
+              docker push "${IMAGE}:${TAG}"
+              docker tag "${IMAGE}:${TAG}" "${IMAGE}:${TAG}-${GITHUB_SHA:0:7}"
+              docker push "${IMAGE}:${TAG}-${GITHUB_SHA:0:7}"
+              echo $PY_VER $DIST;
+              [ "${PY_VER}" == "3.9" ] && [ "${DIST}" == "alpine" ] \
+                      && docker tag "${IMAGE}:${TAG}" "${IMAGE}:latest" \
+                      && docker push "${IMAGE}:latest" \
+                      && echo "pushed 'latest' tag..." \
+                  || echo "skipping 'latest' tag..."
+          done

@@ -6,3 +6,5 @@
 
 ## Misc
 *.code-workspace
+.env
+*.pem
