@@ -35,7 +35,7 @@ jobs:
   #         echo "PRERELEASE=${PRERELEASE}"
   #         echo "DRAFT=${DRAFT}"
   build:
-    needs: test-changelog
+    # needs: test-changelog
     runs-on: ubuntu-latest
     env:
       PY_VER: ${{inputs.py_ver}}
