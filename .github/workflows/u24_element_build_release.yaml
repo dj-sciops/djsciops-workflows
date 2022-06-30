@@ -74,14 +74,14 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: image-${{env.PKG_NAME}}-${{env.PKG_VERSION}}-py${{env.PY_VER}}-${{env.DIST}}
-          path: "image-${{env.PKG_NAME}}-${{env.PKG_VERSION}}-py${{env.PY_VER}}-${{env.DIST}}.tar.gz"
+          path: "./main/image-${{env.PKG_NAME}}-${{env.PKG_VERSION}}-py${{env.PY_VER}}-${{env.DIST}}.tar.gz"
           retention-days: 1
       - if: env.PY_VER == '3.9' && env.DIST == 'alpine'
         name: Add pip artifacts
         uses: actions/upload-artifact@v2
         with:
           name: pip-${{env.PKG_NAME}}-${{env.PKG_VERSION}}
-          path: dist
+          path: ./main/dist
           retention-days: 1
   publish-release:
     if: |
