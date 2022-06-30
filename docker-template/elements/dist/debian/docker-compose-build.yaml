@@ -18,8 +18,8 @@ services:
     volumes:
       - .:/main
     command:
-      - sh
-      - -lc
+      - bash
+      - -c
       - |
         set -e
         rm -R build dist *.egg-info || echo "No prev build"
