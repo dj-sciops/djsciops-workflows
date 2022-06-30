@@ -5,12 +5,16 @@ ARG PKG_NAME
 ARG PKG_VERSION
 
 FROM datajoint/${IMAGE}:py${PY_VER}-${DIST}
+USER root
+RUN \
+    apk update && \
+    apk-get install -y git
+USER anaconda
+
 COPY --chown=anaconda:anaconda ./requirements.txt ./setup.py \
     /main/
 COPY --chown=anaconda:anaconda ./${PKG_NAME} /main/${PKG_NAME}
 RUN \
-    apk update && \
-    apk-get install -y get && \
     cd /main && \
     pip install . && \
     rm -R /main/*
