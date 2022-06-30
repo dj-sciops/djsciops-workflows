@@ -57,6 +57,7 @@ jobs:
         run: |
           ## Get docker template
           cp -r ./cicd/docker-template/elements/dist/${DIST}/* ./main/
+          cd ./main
           ls -a
 
           export PKG_NAME=$(python3 -c "print([p for p in __import__('setuptools').find_packages() if '.' not in p][0])")
