@@ -13,6 +13,22 @@ on:
         required: true
         type: string
 
+anchor-dev-push: &dev-push
+  if: |
+    github.event_name == 'push' &&
+    startsWith(github.ref, 'refs/tags') &&
+    github.repository_owner == 'yambottle'
+anchor-test-push: &test-push
+  if: |
+    github.event_name == 'push' &&
+    startsWith(github.ref, 'refs/tags') &&
+    github.repository_owner == 'yambottle'
+anchor-prod-push: &prod-push
+  if: |
+    github.event_name == 'push' &&
+    startsWith(github.ref, 'refs/tags') &&
+    github.repository_owner == 'dj-sciops'
+
 jobs:
   test-changelog:
     runs-on: ubuntu-latest
@@ -75,7 +91,7 @@ jobs:
           path: dist
           retention-days: 1
   publish-release:
-    if: github.event_name == 'push'
+    !!merge <<: *$STAGE-push
     needs: build
     runs-on: ubuntu-latest
     env:
