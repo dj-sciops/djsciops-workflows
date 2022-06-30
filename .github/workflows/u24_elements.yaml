@@ -11,11 +11,7 @@ on:
       image:
         required: true
         type: string
-    secrets:
-      REGISTRY_USERNAME:
-        required: true
-      REGISTRY_PASSWORD:
-        required: true
+        
 jobs:
   test-changelog:
     runs-on: ubuntu-latest
