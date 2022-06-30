@@ -82,7 +82,6 @@ jobs:
           ## Get docker template
           cp -r ./cicd/docker-template/elements/dist/${DIST}/* ./main/
           cd ./main
-          ls -a
 
           export PKG_NAME=$(python3 -c "print([p for p in __import__('setuptools').find_packages() if '.' not in p][0])")
           export PKG_VERSION=$(cat ${PKG_NAME}/version.py | awk -F\" '/__version__ = / {print $2}')
