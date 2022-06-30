@@ -8,7 +8,7 @@ FROM datajoint/${IMAGE}:py${PY_VER}-${DIST}
 USER root
 RUN \
     apk update && \
-    apk-get install -y git
+    apk add git
 USER anaconda
 
 COPY --chown=anaconda:anaconda ./requirements.txt ./setup.py \
