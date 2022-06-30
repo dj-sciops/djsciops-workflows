@@ -101,7 +101,7 @@ jobs:
         name: Build codebook env image
         run: |
           ## Get docker template
-          cp -r ./cicd/docker-template/* ./main/docker/
+          cp -r ./cicd/docker-template/codebook_env ./main/docker/
 
           ## Get build info
           cd ./main/docker/codebook_env

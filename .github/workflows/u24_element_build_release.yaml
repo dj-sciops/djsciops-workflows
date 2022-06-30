@@ -44,9 +44,21 @@ jobs:
       DOCKER_CLIENT_TIMEOUT: "120"
       COMPOSE_HTTP_TIMEOUT: "120"
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout element repo
+        uses: actions/checkout@v2
+        with:
+          path: 'main'
+      - name: Checkout cicd repo
+        uses: actions/checkout@v2
+        with:
+          repository: 'yambottle/djsciops-cicd'
+          path: 'cicd'
       - name: Compile image
         run: |
+          ## Get docker template
+          cp -r ./cicd/docker-template/elements/dist/${DIST}/* ./main/
+          ls -a
+
           export PKG_NAME=$(python3 -c "print([p for p in __import__('setuptools').find_packages() if '.' not in p][0])")
           export PKG_VERSION=$(cat ${PKG_NAME}/version.py | awk -F\" '/__version__ = / {print $2}')
           export HOST_UID=$(id -u)
