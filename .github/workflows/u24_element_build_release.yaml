@@ -16,14 +16,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: random test
-        run: |
-          ls -a
       - name: Get changelog entry
         id: changelog_reader
         uses: guzman-raphael/changelog-reader-action@v5
-        with:
-          path: ./CHANGELOG.md
       - name: Verify changelog parsing
         env:
           TAG_NAME: ${{steps.changelog_reader.outputs.version}}
