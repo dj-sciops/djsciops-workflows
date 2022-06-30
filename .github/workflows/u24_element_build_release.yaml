@@ -89,7 +89,7 @@ jobs:
         run: |
           PKG_NAME=$(python3 -c "print([p for p in __import__('setuptools').find_packages() if '.' not in p][0])")
           SDIST_PKG_NAME=$(echo ${PKG_NAME} | sed 's|_|-|g')
-          PKG_VERSION=$(cat ${PKG_NAME}/version.py | awk -F\' '/__version__ = / {print $2}')
+          PKG_VERSION=$(cat ${PKG_NAME}/version.py | awk -F\" '/__version__ = / {print $2}')
           echo "PKG_NAME=${PKG_NAME}" >> $GITHUB_ENV
           echo "PKG_VERSION=${PKG_VERSION}" >> $GITHUB_ENV
           echo "SDIST_PKG_NAME=${SDIST_PKG_NAME}" >> $GITHUB_ENV
@@ -113,7 +113,7 @@ jobs:
       - name: Fetch image artifact
         uses: actions/download-artifact@v2
         with:
-          name: image-${{env.PKG_NAME}}-${{env.PKG_VERSION}}-${{inputs.py_ver}}-${{inputs.dist}}
+          name: image-${{env.PKG_NAME}}-${{env.PKG_VERSION}}-py${{inputs.py_ver}}-${{inputs.dist}}
       - name: Fetch pip artifacts
         uses: actions/download-artifact@v2
         with:
@@ -122,7 +122,7 @@ jobs:
       - name: Publish pip release
         run: |
           export HOST_UID=$(id -u)
-          docker load < "image-${{env.PKG_NAME}}-${PKG_VERSION}-${{inputs.py_ver}}-${{inputs.dist}}.tar.gz"
+          docker load < "image-${{env.PKG_NAME}}-${PKG_VERSION}-py${{inputs.py_ver}}-${{inputs.dist}}.tar.gz"
           docker-compose -f docker-compose-build.yaml run \
             -e TWINE_USERNAME=${TWINE_USERNAME} -e TWINE_PASSWORD=${TWINE_PASSWORD} element \
             sh -lc "pip install twine && python -m twine upload dist/*"
