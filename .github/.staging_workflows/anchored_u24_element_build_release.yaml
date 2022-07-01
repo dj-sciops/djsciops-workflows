@@ -118,9 +118,21 @@ jobs:
     outputs:
       release_upload_url: ${{steps.create_gh_release.outputs.upload_url}}
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout element repo
+        uses: actions/checkout@v2
+        with:
+          path: 'main'
+      - name: Checkout cicd repo
+        uses: actions/checkout@v2
+        with:
+          !!merge <<: *$STAGE-cicd-repo
+          path: 'cicd'
       - name: Determine package version
         run: |
+          ## Get docker template
+          cp -r ./cicd/docker-template/elements/dist/${DIST}/* ./main/
+          cd ./main
+          
           PKG_NAME=$(python3 -c "print([p for p in __import__('setuptools').find_packages() if '.' not in p][0])")
           SDIST_PKG_NAME=$(echo ${PKG_NAME} | sed 's|_|-|g')
           PKG_VERSION=$(cat ${PKG_NAME}/version.py | grep -oP '\d+\.\d+\.[a-z0-9]+')
