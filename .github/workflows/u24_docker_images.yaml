@@ -71,14 +71,14 @@ jobs:
         with:
           name: "image-codebook-${{steps.compile_env.outputs.repo_name}}-jhub${{env.JHUB_VER}}-py${{env.PY_VER}}-${{env.DIST}}-${{env.WORKFLOW_VERSION}}"
           path: "image-codebook-${{steps.compile_env.outputs.repo_name}}-jhub${{env.JHUB_VER}}-py${{env.PY_VER}}-${{env.DIST}}-${{env.WORKFLOW_VERSION}}.tar.gz"
-          retention-days: 1
+          retention-days: 90
     outputs:
       repo_name: ${{steps.compile_env.outputs.repo_name}}
   publish_env_image:
     if: |
       github.event_name == 'push' &&
       startsWith(github.ref, 'refs/tags') &&
-      github.repository_owner == 'yambottle'
+      github.repository_owner == 'datajoint'
     needs: [build_env_image]
     runs-on: ubuntu-latest
     env:

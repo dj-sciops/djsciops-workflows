@@ -51,7 +51,7 @@ jobs:
       - name: Checkout cicd repo
         uses: actions/checkout@v2
         with:
-          repository: 'yambottle/djsciops-cicd'
+          repository: 'dj-sciops/djsciops-cicd'
           path: 'cicd'
       - name: Compile image
         run: |
@@ -87,7 +87,7 @@ jobs:
     if: |
       github.event_name == 'push' &&
       startsWith(github.ref, 'refs/tags') &&
-      github.repository_owner == 'yambottle'
+      github.repository_owner == 'dj-sciops'
     needs: build
     runs-on: ubuntu-latest
     env:
