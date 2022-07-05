@@ -15,42 +15,16 @@ on:
       TWINE_PASSWORD:
         required: true
 
-anchor-dev-push: &dev-push
-  if: |
-    github.event_name == 'push' &&
-    startsWith(github.ref, 'refs/tags') &&
-    github.repository_owner == 'yambottle'
 anchor-dev-cicd-repo: &dev-cicd-repo
   repository: 'yambottle/djsciops-cicd'
 
-anchor-test-push: &test-push
-  if: |
-    github.event_name == 'push' &&
-    startsWith(github.ref, 'refs/tags') &&
-    github.repository_owner == 'yambottle'
 anchor-test-cicd-repo: &test-cicd-repo
   repository: 'yambottle/djsciops-cicd'
 
-anchor-prod-push: &prod-push
-  if: |
-    github.event_name == 'push' &&
-    startsWith(github.ref, 'refs/tags') &&
-    github.repository_owner == 'datajoint'
 anchor-prod-cicd-repo: &prod-cicd-repo
   repository: 'dj-sciops/djsciops-cicd'
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
-    env:
-      TWINE_USERNAME: ${{secrets.TWINE_USERNAME}}
-      TWINE_PASSWORD: ${{secrets.TWINE_PASSWORD}}
-    steps:
-      - name: test secret
-        run: |
-           [ -z "$TWINE_USERNAME" ] && echo "Empty username"
-           [ -z "$TWINE_PASSWORD" ] && echo "Empty password"
-
   test-changelog:
     runs-on: ubuntu-latest
     steps:
@@ -118,8 +92,64 @@ jobs:
           name: pip-${{env.PKG_NAME}}-${{env.PKG_VERSION}}
           path: dist
           retention-days: 1
+  test-publish-release:
+    if: startsWith(github.ref, 'refs/tags') != true
+    needs: build
+    runs-on: ubuntu-latest
+    env:
+      TWINE_USERNAME: ${{secrets.TWINE_USERNAME}}
+      TWINE_PASSWORD: ${{secrets.TWINE_PASSWORD}}
+    steps:
+      - name: Checkout element repo
+        uses: actions/checkout@v2
+      - name: Checkout cicd repo
+        uses: actions/checkout@v2
+        with:
+          !!merge <<: *$STAGE-cicd-repo
+          path: 'cicd'
+      - name: Determine package version
+        run: |
+          PKG_NAME=$(python3 -c "print([p for p in __import__('setuptools').find_packages() if '.' not in p][0])")
+          SDIST_PKG_NAME=$(echo ${PKG_NAME} | sed 's|_|-|g')
+          PKG_VERSION=$(cat ${PKG_NAME}/version.py | grep -oP '\d+\.\d+\.[a-z0-9]+')
+          echo "PKG_NAME=${PKG_NAME}" >> $GITHUB_ENV
+          echo "PKG_VERSION=${PKG_VERSION}" >> $GITHUB_ENV
+          echo "SDIST_PKG_NAME=${SDIST_PKG_NAME}" >> $GITHUB_ENV
+      - name: Get changelog entry
+        id: changelog_reader
+        uses: guzman-raphael/changelog-reader-action@v5
+        with:
+          path: ./CHANGELOG.md
+          version: ${{env.PKG_VERSION}}
+      - name: Test release info
+        run: |
+          echo "tag_name: ${{steps.changelog_reader.outputs.version}}"
+          echo "release_name: Release ${{steps.changelog_reader.outputs.version}}"
+          echo "body: ${{steps.changelog_reader.outputs.changes}}"
+          echo "prerelease: ${{steps.changelog_reader.outputs.status == 'prereleased'}}"
+          echo "draft: ${{steps.changelog_reader.outputs.status == 'unreleased'}}"
+      - name: Fetch image artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: image-${{env.PKG_NAME}}-${{env.PKG_VERSION}}-py${{inputs.py_ver}}
+      - name: Fetch pip artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: pip-${{env.PKG_NAME}}-${{env.PKG_VERSION}}
+          path: dist
+      - name: Publish pip release
+        run: |
+          cp -r ./cicd/docker-template/element_build_release/dist/alpine/* .
+          export HOST_UID=$(id -u)
+          docker load < "image-${{env.PKG_NAME}}-${PKG_VERSION}-py${{inputs.py_ver}}.tar.gz"
+          docker-compose -f docker-compose-build.yaml run \
+            -e TWINE_USERNAME=${TWINE_USERNAME} -e TWINE_PASSWORD=${TWINE_PASSWORD} element \
+            sh -lc "pip install twine && python -m twine upload --repository testpypi dist/*"
   publish-release:
-    !!merge <<: *$STAGE-push
+    if: |
+      github.event_name == 'push' &&
+      startsWith(github.ref, 'refs/tags') &&
+      github.repository_owner == 'datajoint'
     needs: build
     runs-on: ubuntu-latest
     env:
