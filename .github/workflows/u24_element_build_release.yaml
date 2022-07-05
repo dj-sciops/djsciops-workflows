@@ -46,8 +46,6 @@ jobs:
     steps:
       - name: Checkout element repo
         uses: actions/checkout@v2
-        with:
-          path: 'main'
       - name: Checkout cicd repo
         uses: actions/checkout@v2
         with:
@@ -56,8 +54,7 @@ jobs:
       - name: Compile image
         run: |
           ## Get docker template
-          cp -r ./cicd/docker-template/elements/dist/${DIST}/* ./main/
-          cd ./main
+          cp -r ./cicd/docker-template/elements/dist/${DIST}/* .
 
           export PKG_NAME=$(python3 -c "print([p for p in __import__('setuptools').find_packages() if '.' not in p][0])")
           export PKG_VERSION=$(cat ${PKG_NAME}/version.py | grep -oP '\d+\.\d+\.[a-z0-9]+')
@@ -74,14 +71,14 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: image-${{env.PKG_NAME}}-${{env.PKG_VERSION}}-py${{env.PY_VER}}-${{env.DIST}}
-          path: "./main/image-${{env.PKG_NAME}}-${{env.PKG_VERSION}}-py${{env.PY_VER}}-${{env.DIST}}.tar.gz"
+          path: "image-${{env.PKG_NAME}}-${{env.PKG_VERSION}}-py${{env.PY_VER}}-${{env.DIST}}.tar.gz"
           retention-days: 1
       - if: env.PY_VER == '3.9' && env.DIST == 'alpine'
         name: Add pip artifacts
         uses: actions/upload-artifact@v2
         with:
           name: pip-${{env.PKG_NAME}}-${{env.PKG_VERSION}}
-          path: ./main/dist
+          path: dist
           retention-days: 1
   publish-release:
     if: |
@@ -98,16 +95,16 @@ jobs:
     steps:
       - name: Checkout element repo
         uses: actions/checkout@v2
-        with:
-          path: 'main'
       - name: Checkout cicd repo
         uses: actions/checkout@v2
         with:
           repository: 'yambottle/djsciops-cicd'
           path: 'cicd'
+      - name: Get element release docker template
+        run: |
+          cp -r ./cicd/docker-template/elements/dist/${DIST}/* .
       - name: Determine package version
         run: |
-          cd ./main
           PKG_NAME=$(python3 -c "print([p for p in __import__('setuptools').find_packages() if '.' not in p][0])")
           SDIST_PKG_NAME=$(echo ${PKG_NAME} | sed 's|_|-|g')
           PKG_VERSION=$(cat ${PKG_NAME}/version.py | grep -oP '\d+\.\d+\.[a-z0-9]+')
@@ -118,7 +115,7 @@ jobs:
         id: changelog_reader
         uses: guzman-raphael/changelog-reader-action@v5
         with:
-          path: ./main/CHANGELOG.md
+          path: ./CHANGELOG.md
           version: ${{env.PKG_VERSION}}
       - name: Create GH release
         id: create_gh_release
@@ -142,10 +139,6 @@ jobs:
           path: dist
       - name: Publish pip release
         run: |
-          ## Get docker template
-          cp -r ./cicd/docker-template/elements/dist/${DIST}/* ./main/
-          cd ./main
-
           export HOST_UID=$(id -u)
           docker load < "image-${{env.PKG_NAME}}-${PKG_VERSION}-py${{inputs.py_ver}}-${{inputs.dist}}.tar.gz"
           docker-compose -f docker-compose-build.yaml run \
