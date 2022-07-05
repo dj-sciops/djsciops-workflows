@@ -9,6 +9,11 @@ on:
       image:
         required: true
         type: string
+    secrets:
+      TWINE_USERNAME:
+        required: true
+      TWINE_PASSWORD:
+        required: true
 
 anchor-dev-push: &dev-push
   if: |
