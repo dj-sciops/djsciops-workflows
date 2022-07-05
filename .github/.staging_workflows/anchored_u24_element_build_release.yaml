@@ -1,4 +1,4 @@
-name: u24_elements
+name: u24_element_build_release
 
 on:
   workflow_call:
