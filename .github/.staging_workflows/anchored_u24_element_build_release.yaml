@@ -42,8 +42,8 @@ jobs:
       TWINE_PASSWORD: ${{secrets.twine_password}}
     steps:
       - name: test secret
-      - run: |
-        echo $TWINE_USERNAME
+        run: |
+          echo $TWINE_USERNAME
 
   test-changelog:
     runs-on: ubuntu-latest
