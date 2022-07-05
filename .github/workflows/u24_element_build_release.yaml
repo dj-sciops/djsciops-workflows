@@ -12,8 +12,8 @@ jobs:
   test:
     runs-on: ubuntu-latest
     env:
-      TWINE_USERNAME: ${{secrets.twine_username}}
-      TWINE_PASSWORD: ${{secrets.twine_password}}
+      TWINE_USERNAME: ${{secrets.TWINE_USERNAME}}
+      TWINE_PASSWORD: ${{secrets.TWINE_PASSWORD}}
     steps:
       - name: test secret
         run: |
@@ -93,8 +93,8 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     env:
-      TWINE_USERNAME: ${{secrets.twine_username}}
-      TWINE_PASSWORD: ${{secrets.twine_password}}
+      TWINE_USERNAME: ${{secrets.TWINE_USERNAME}}
+      TWINE_PASSWORD: ${{secrets.TWINE_PASSWORD}}
     steps:
       - name: Checkout element repo
         uses: actions/checkout@v2
