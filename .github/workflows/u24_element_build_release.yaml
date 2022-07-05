@@ -17,7 +17,8 @@ jobs:
     steps:
       - name: test secret
         run: |
-          echo $TWINE_USERNAME
+          [ -z "$TWINE_USERNAME" ] && echo "Empty username"
+          [ -z "$TWINE_PASSWORD" ] && echo "Empty password"
   test-changelog:
     runs-on: ubuntu-latest
     steps:
