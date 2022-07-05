@@ -50,7 +50,7 @@ jobs:
       - name: Checkout cicd repo
         uses: actions/checkout@v2
         with:
-          repository: 'yambottle/djsciops-cicd'
+          repository: 'dj-sciops/djsciops-cicd'
           path: 'cicd'
       - name: Compile image
         run: |
@@ -94,7 +94,7 @@ jobs:
       - name: Checkout cicd repo
         uses: actions/checkout@v2
         with:
-          repository: 'yambottle/djsciops-cicd'
+          repository: 'dj-sciops/djsciops-cicd'
           path: 'cicd'
       - name: Determine package version
         run: |
@@ -182,7 +182,7 @@ jobs:
       - name: Checkout cicd repo
         uses: actions/checkout@v2
         with:
-          repository: 'yambottle/djsciops-cicd'
+          repository: 'dj-sciops/djsciops-cicd'
           path: 'cicd'
       - name: Determine package version
         run: |
