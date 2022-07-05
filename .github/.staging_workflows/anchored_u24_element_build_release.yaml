@@ -35,6 +35,16 @@ anchor-prod-cicd-repo: &prod-cicd-repo
   repository: 'dj-sciops/djsciops-cicd'
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      TWINE_USERNAME: ${{secrets.twine_username}}
+      TWINE_PASSWORD: ${{secrets.twine_password}}
+    steps:
+      - name: test secret
+      - run: |
+        echo $TWINE_USERNAME
+
   test-changelog:
     runs-on: ubuntu-latest
     steps:
