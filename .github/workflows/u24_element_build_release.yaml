@@ -107,10 +107,7 @@ jobs:
           path: 'cicd'
       - name: Determine package version
         run: |
-          ## Get docker template
-          cp -r ./cicd/docker-template/elements/dist/${DIST}/* ./main/
           cd ./main
-
           PKG_NAME=$(python3 -c "print([p for p in __import__('setuptools').find_packages() if '.' not in p][0])")
           SDIST_PKG_NAME=$(echo ${PKG_NAME} | sed 's|_|-|g')
           PKG_VERSION=$(cat ${PKG_NAME}/version.py | grep -oP '\d+\.\d+\.[a-z0-9]+')
@@ -145,6 +142,10 @@ jobs:
           path: dist
       - name: Publish pip release
         run: |
+          ## Get docker template
+          cp -r ./cicd/docker-template/elements/dist/${DIST}/* ./main/
+          cd ./main
+
           export HOST_UID=$(id -u)
           docker load < "image-${{env.PKG_NAME}}-${PKG_VERSION}-py${{inputs.py_ver}}-${{inputs.dist}}.tar.gz"
           docker-compose -f docker-compose-build.yaml run \
