@@ -1,16 +1,18 @@
-name: u24_elements
+name: u24_element_build_release
 on:
   workflow_call:
     inputs:
       py_ver:
         required: true
         type: string
-      dist:
-        required: true
-        type: string
       image:
         required: true
         type: string
+    secrets:
+      TWINE_USERNAME:
+        required: true
+      TWINE_PASSWORD:
+        required: true
 jobs:
   test-changelog:
     runs-on: ubuntu-latest
@@ -39,15 +41,12 @@ jobs:
     runs-on: ubuntu-latest
     env:
       PY_VER: ${{inputs.py_ver}}
-      DIST: ${{inputs.dist}}
       IMAGE: ${{inputs.image}}
       DOCKER_CLIENT_TIMEOUT: "120"
       COMPOSE_HTTP_TIMEOUT: "120"
     steps:
       - name: Checkout element repo
         uses: actions/checkout@v2
-        with:
-          path: 'main'
       - name: Checkout cicd repo
         uses: actions/checkout@v2
         with:
@@ -56,8 +55,7 @@ jobs:
       - name: Compile image
         run: |
           ## Get docker template
-          cp -r ./cicd/docker-template/elements/dist/${DIST}/* ./main/
-          cd ./main
+          cp -r ./cicd/docker-template/element_build_release/dist/alpine/* .
 
           export PKG_NAME=$(python3 -c "print([p for p in __import__('setuptools').find_packages() if '.' not in p][0])")
           export PKG_VERSION=$(cat ${PKG_NAME}/version.py | grep -oP '\d+\.\d+\.[a-z0-9]+')
@@ -67,22 +65,107 @@ jobs:
             --format "{{.Repository}}")
           TAG=$(docker images --filter "reference=datajoint/${PKG_NAME}*" --format "{{.Tag}}")
           docker save "${IMAGE}:${TAG}" | \
-            gzip > "image-${PKG_NAME}-${PKG_VERSION}-py${PY_VER}-${DIST}.tar.gz"
+            gzip > "image-${PKG_NAME}-${PKG_VERSION}-py${PY_VER}.tar.gz"
           echo "PKG_NAME=${PKG_NAME}" >> $GITHUB_ENV
           echo "PKG_VERSION=${PKG_VERSION}" >> $GITHUB_ENV
       - name: Add image artifact
         uses: actions/upload-artifact@v2
         with:
-          name: image-${{env.PKG_NAME}}-${{env.PKG_VERSION}}-py${{env.PY_VER}}-${{env.DIST}}
-          path: "./main/image-${{env.PKG_NAME}}-${{env.PKG_VERSION}}-py${{env.PY_VER}}-${{env.DIST}}.tar.gz"
+          name: image-${{env.PKG_NAME}}-${{env.PKG_VERSION}}-py${{env.PY_VER}}
+          path: "image-${{env.PKG_NAME}}-${{env.PKG_VERSION}}-py${{env.PY_VER}}.tar.gz"
           retention-days: 1
-      - if: env.PY_VER == '3.9' && env.DIST == 'alpine'
+      - if: env.PY_VER == '3.9'
         name: Add pip artifacts
         uses: actions/upload-artifact@v2
         with:
           name: pip-${{env.PKG_NAME}}-${{env.PKG_VERSION}}
-          path: ./main/dist
+          path: dist
           retention-days: 1
+  test-publish-release:
+    if: startsWith(github.ref, 'refs/tags') != true
+    needs: build
+    runs-on: ubuntu-latest
+    env:
+      TWINE_USERNAME: ${{secrets.TWINE_USERNAME}}
+      TWINE_PASSWORD: ${{secrets.TWINE_PASSWORD}}
+    steps:
+      - name: Checkout element repo
+        uses: actions/checkout@v2
+      - name: Checkout cicd repo
+        uses: actions/checkout@v2
+        with:
+          repository: 'dj-sciops/djsciops-cicd'
+          path: 'cicd'
+      - name: Determine package version
+        run: |
+          PKG_NAME=$(python3 -c "print([p for p in __import__('setuptools').find_packages() if '.' not in p][0])")
+          SDIST_PKG_NAME=$(echo ${PKG_NAME} | sed 's|_|-|g')
+          PKG_VERSION=$(cat ${PKG_NAME}/version.py | grep -oP '\d+\.\d+\.[a-z0-9]+')
+          echo "PKG_NAME=${PKG_NAME}" >> $GITHUB_ENV
+          echo "PKG_VERSION=${PKG_VERSION}" >> $GITHUB_ENV
+          echo "SDIST_PKG_NAME=${SDIST_PKG_NAME}" >> $GITHUB_ENV
+      - name: Get changelog entry
+        id: changelog_reader
+        uses: guzman-raphael/changelog-reader-action@v5
+        with:
+          path: ./CHANGELOG.md
+          version: ${{env.PKG_VERSION}}
+      - name: Create GH release
+        id: create_gh_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+        with:
+          tag_name: ${{steps.changelog_reader.outputs.version}}
+          release_name: Release ${{steps.changelog_reader.outputs.version}}
+          body: ${{steps.changelog_reader.outputs.changes}}
+          prerelease: ${{steps.changelog_reader.outputs.status == 'prereleased'}}
+          draft: true
+      - name: Fetch image artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: image-${{env.PKG_NAME}}-${{env.PKG_VERSION}}-py${{inputs.py_ver}}
+      - name: Fetch pip artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: pip-${{env.PKG_NAME}}-${{env.PKG_VERSION}}
+          path: dist
+      - name: Publish pip release
+        run: |
+          cp -r ./cicd/docker-template/element_build_release/dist/alpine/* .
+          export HOST_UID=$(id -u)
+          docker load < "image-${{env.PKG_NAME}}-${PKG_VERSION}-py${{inputs.py_ver}}.tar.gz"
+          docker-compose -f docker-compose-build.yaml run \
+            -e TWINE_USERNAME=${TWINE_USERNAME} -e TWINE_PASSWORD=${TWINE_PASSWORD} element \
+            sh -lc "pip install twine && python -m twine upload --repository testpypi dist/*"
+      - name: Determine pip artifact paths
+        run: |
+          echo "PKG_WHEEL_PATH=$(ls dist/${PKG_NAME}-*.whl)" >> $GITHUB_ENV
+          echo "PKG_SDIST_PATH=$(ls dist/${SDIST_PKG_NAME}-*.tar.gz)" >> $GITHUB_ENV
+      - name: Upload pip wheel asset to release
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+        with:
+          upload_url: ${{steps.create_gh_release.outputs.upload_url}}
+          asset_path: ${{env.PKG_WHEEL_PATH}}
+          asset_name: pip-${{env.PKG_NAME}}-${{env.PKG_VERSION}}.whl
+          asset_content_type: application/zip
+      - name: Upload pip sdist asset to release
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+        with:
+          upload_url: ${{steps.create_gh_release.outputs.upload_url}}
+          asset_path: ${{env.PKG_SDIST_PATH}}
+          asset_name: pip-${{env.SDIST_PKG_NAME}}-${{env.PKG_VERSION}}.tar.gz
+          asset_content_type: application/gzip
+      - name: Delete drafts
+        uses: hugo19941994/delete-draft-releases@v1.0.0
+        with:
+          threshold: 7d
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
   publish-release:
     if: |
       github.event_name == 'push' &&
@@ -91,12 +174,16 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     env:
-      TWINE_USERNAME: ${{secrets.twine_username}}
-      TWINE_PASSWORD: ${{secrets.twine_password}}
-    outputs:
-      release_upload_url: ${{steps.create_gh_release.outputs.upload_url}}
+      TWINE_USERNAME: ${{secrets.TWINE_USERNAME}}
+      TWINE_PASSWORD: ${{secrets.TWINE_PASSWORD}}
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout element repo
+        uses: actions/checkout@v2
+      - name: Checkout cicd repo
+        uses: actions/checkout@v2
+        with:
+          repository: 'dj-sciops/djsciops-cicd'
+          path: 'cicd'
       - name: Determine package version
         run: |
           PKG_NAME=$(python3 -c "print([p for p in __import__('setuptools').find_packages() if '.' not in p][0])")
@@ -125,7 +212,7 @@ jobs:
       - name: Fetch image artifact
         uses: actions/download-artifact@v2
         with:
-          name: image-${{env.PKG_NAME}}-${{env.PKG_VERSION}}-py${{inputs.py_ver}}-${{inputs.dist}}
+          name: image-${{env.PKG_NAME}}-${{env.PKG_VERSION}}-py${{inputs.py_ver}}
       - name: Fetch pip artifacts
         uses: actions/download-artifact@v2
         with:
@@ -133,8 +220,9 @@ jobs:
           path: dist
       - name: Publish pip release
         run: |
+          cp -r ./cicd/docker-template/element_build_release/dist/alpine/* .
           export HOST_UID=$(id -u)
-          docker load < "image-${{env.PKG_NAME}}-${PKG_VERSION}-py${{inputs.py_ver}}-${{inputs.dist}}.tar.gz"
+          docker load < "image-${{env.PKG_NAME}}-${PKG_VERSION}-py${{inputs.py_ver}}.tar.gz"
           docker-compose -f docker-compose-build.yaml run \
             -e TWINE_USERNAME=${TWINE_USERNAME} -e TWINE_PASSWORD=${TWINE_PASSWORD} element \
             sh -lc "pip install twine && python -m twine upload dist/*"

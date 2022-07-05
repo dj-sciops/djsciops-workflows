@@ -1,14 +1,13 @@
 ARG PY_VER
-ARG DIST
 ARG IMAGE
 ARG PKG_NAME
 ARG PKG_VERSION
 
-FROM datajoint/${IMAGE}:py${PY_VER}-${DIST}
+FROM datajoint/${IMAGE}:py${PY_VER}-debian
 USER root
 RUN \
-    apk update && \
-    apk add git
+    apt update && \
+    apt-get install -y git
 USER anaconda
 
 COPY --chown=anaconda:anaconda ./requirements.txt ./setup.py \

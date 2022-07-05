@@ -1,14 +1,13 @@
 ARG PY_VER
-ARG DIST
 ARG IMAGE
 ARG PKG_NAME
 ARG PKG_VERSION
 
-FROM datajoint/${IMAGE}:py${PY_VER}-${DIST}
+FROM datajoint/${IMAGE}:py${PY_VER}-alpine
 USER root
 RUN \
-    apt update && \
-    apt-get install -y git
+    apk update && \
+    apk add git
 USER anaconda
 
 COPY --chown=anaconda:anaconda ./requirements.txt ./setup.py \
