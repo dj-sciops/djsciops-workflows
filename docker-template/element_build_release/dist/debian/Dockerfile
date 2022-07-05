@@ -1,10 +1,9 @@
 ARG PY_VER
-ARG DIST
 ARG IMAGE
 ARG PKG_NAME
 ARG PKG_VERSION
 
-FROM datajoint/${IMAGE}:py${PY_VER}-${DIST}
+FROM datajoint/${IMAGE}:py${PY_VER}-debian
 USER root
 RUN \
     apt update && \
