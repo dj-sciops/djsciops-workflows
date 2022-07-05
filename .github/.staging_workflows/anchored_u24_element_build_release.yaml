@@ -154,7 +154,6 @@ jobs:
       - name: Publish pip release
         run: |
           cp -r ./cicd/docker-template/element_build_release/dist/alpine/* .
-          ls
           export HOST_UID=$(id -u)
           docker load < "image-${{env.PKG_NAME}}-${PKG_VERSION}-py${{inputs.py_ver}}.tar.gz"
           docker-compose -f docker-compose-build.yaml run \
