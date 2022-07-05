@@ -110,13 +110,17 @@ jobs:
         with:
           path: ./CHANGELOG.md
           version: ${{env.PKG_VERSION}}
-      - name: Test release info
-        run: |
-          echo "tag_name: ${{steps.changelog_reader.outputs.version}}"
-          echo "release_name: Release ${{steps.changelog_reader.outputs.version}}"
-          echo "body: ${{steps.changelog_reader.outputs.changes}}"
-          echo "prerelease: ${{steps.changelog_reader.outputs.status == 'prereleased'}}"
-          echo "draft: ${{steps.changelog_reader.outputs.status == 'unreleased'}}"
+      - name: Create GH release
+        id: create_gh_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+        with:
+          tag_name: ${{steps.changelog_reader.outputs.version}}
+          release_name: Release ${{steps.changelog_reader.outputs.version}}
+          body: ${{steps.changelog_reader.outputs.changes}}
+          prerelease: ${{steps.changelog_reader.outputs.status == 'prereleased'}}
+          draft: true
       - name: Fetch image artifact
         uses: actions/download-artifact@v2
         with:
@@ -134,6 +138,28 @@ jobs:
           docker-compose -f docker-compose-build.yaml run \
             -e TWINE_USERNAME=${TWINE_USERNAME} -e TWINE_PASSWORD=${TWINE_PASSWORD} element \
             sh -lc "pip install twine && python -m twine upload --repository testpypi dist/*"
+      - name: Determine pip artifact paths
+        run: |
+          echo "PKG_WHEEL_PATH=$(ls dist/${PKG_NAME}-*.whl)" >> $GITHUB_ENV
+          echo "PKG_SDIST_PATH=$(ls dist/${SDIST_PKG_NAME}-*.tar.gz)" >> $GITHUB_ENV
+      - name: Upload pip wheel asset to release
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+        with:
+          upload_url: ${{steps.create_gh_release.outputs.upload_url}}
+          asset_path: ${{env.PKG_WHEEL_PATH}}
+          asset_name: pip-${{env.PKG_NAME}}-${{env.PKG_VERSION}}.whl
+          asset_content_type: application/zip
+      - name: Upload pip sdist asset to release
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+        with:
+          upload_url: ${{steps.create_gh_release.outputs.upload_url}}
+          asset_path: ${{env.PKG_SDIST_PATH}}
+          asset_name: pip-${{env.SDIST_PKG_NAME}}-${{env.PKG_VERSION}}.tar.gz
+          asset_content_type: application/gzip
   publish-release:
     if: |
       github.event_name == 'push' &&
