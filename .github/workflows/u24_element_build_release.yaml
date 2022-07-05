@@ -121,7 +121,7 @@ jobs:
         id: changelog_reader
         uses: guzman-raphael/changelog-reader-action@v5
         with:
-          path: ./CHANGELOG.md
+          path: ./main/CHANGELOG.md
           version: ${{env.PKG_VERSION}}
       - name: Create GH release
         id: create_gh_release

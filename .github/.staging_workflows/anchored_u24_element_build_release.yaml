@@ -132,7 +132,7 @@ jobs:
           ## Get docker template
           cp -r ./cicd/docker-template/elements/dist/${DIST}/* ./main/
           cd ./main
-          
+
           PKG_NAME=$(python3 -c "print([p for p in __import__('setuptools').find_packages() if '.' not in p][0])")
           SDIST_PKG_NAME=$(echo ${PKG_NAME} | sed 's|_|-|g')
           PKG_VERSION=$(cat ${PKG_NAME}/version.py | grep -oP '\d+\.\d+\.[a-z0-9]+')
@@ -143,7 +143,7 @@ jobs:
         id: changelog_reader
         uses: guzman-raphael/changelog-reader-action@v5
         with:
-          path: ./CHANGELOG.md
+          path: ./main/CHANGELOG.md
           version: ${{env.PKG_VERSION}}
       - name: Create GH release
         id: create_gh_release
