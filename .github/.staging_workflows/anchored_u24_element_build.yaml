@@ -1,0 +1,89 @@
+name: u24_element_build
+
+on:
+  workflow_call:
+    inputs:
+      py_ver:
+        required: true
+        type: string
+      image:
+        required: true
+        type: string
+
+anchor-dev-cicd-repo: &dev-cicd-repo
+  repository: 'yambottle/djsciops-cicd'
+
+anchor-test-cicd-repo: &test-cicd-repo
+  repository: 'yambottle/djsciops-cicd'
+
+anchor-prod-cicd-repo: &prod-cicd-repo
+  repository: 'dj-sciops/djsciops-cicd'
+
+jobs:
+  test-changelog:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Get changelog entry
+        id: changelog_reader
+        uses: guzman-raphael/changelog-reader-action@v5
+        with:
+          path: ./CHANGELOG.md
+      - name: Verify changelog parsing
+        env:
+          TAG_NAME: ${{steps.changelog_reader.outputs.version}}
+          RELEASE_NAME: Release ${{steps.changelog_reader.outputs.version}}
+          BODY: ${{steps.changelog_reader.outputs.changes}}
+          PRERELEASE: ${{steps.changelog_reader.outputs.status == 'prereleased'}}
+          DRAFT: ${{steps.changelog_reader.outputs.status == 'unreleased'}}
+        run: |
+          echo "TAG_NAME=${TAG_NAME}"
+          echo "RELEASE_NAME=${RELEASE_NAME}"
+          echo "BODY=${BODY}"
+          echo "PRERELEASE=${PRERELEASE}"
+          echo "DRAFT=${DRAFT}"
+  build:
+    needs: test-changelog
+    runs-on: ubuntu-latest
+    env:
+      PY_VER: ${{inputs.py_ver}}
+      IMAGE: ${{inputs.image}}
+      DOCKER_CLIENT_TIMEOUT: "120"
+      COMPOSE_HTTP_TIMEOUT: "120"
+    steps:
+      - name: Checkout element repo
+        uses: actions/checkout@v2
+      - name: Checkout cicd repo
+        uses: actions/checkout@v2
+        with:
+          !!merge <<: *$STAGE-cicd-repo
+          path: 'cicd'
+      - name: Compile image
+        run: |
+          ## Get docker template
+          cp -r ./cicd/docker-template/element_build_release/dist/alpine/* .
+
+          export PKG_NAME=$(python3 -c "print([p for p in __import__('setuptools').find_packages() if '.' not in p][0])")
+          export PKG_VERSION=$(cat ${PKG_NAME}/version.py | grep -oP '\d+\.\d+\.[a-z0-9]+')
+          export HOST_UID=$(id -u)
+          docker-compose -f docker-compose-build.yaml up --exit-code-from element --build
+          IMAGE=$(docker images --filter "reference=datajoint/${PKG_NAME}*" \
+            --format "{{.Repository}}")
+          TAG=$(docker images --filter "reference=datajoint/${PKG_NAME}*" --format "{{.Tag}}")
+          docker save "${IMAGE}:${TAG}" | \
+            gzip > "image-${PKG_NAME}-${PKG_VERSION}-py${PY_VER}.tar.gz"
+          echo "PKG_NAME=${PKG_NAME}" >> $GITHUB_ENV
+          echo "PKG_VERSION=${PKG_VERSION}" >> $GITHUB_ENV
+      - name: Add image artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: image-${{env.PKG_NAME}}-${{env.PKG_VERSION}}-py${{env.PY_VER}}
+          path: "image-${{env.PKG_NAME}}-${{env.PKG_VERSION}}-py${{env.PY_VER}}.tar.gz"
+          retention-days: 1
+      - if: env.PY_VER == '3.9'
+        name: Add pip artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: pip-${{env.PKG_NAME}}-${{env.PKG_VERSION}}
+          path: dist
+          retention-days: 1
