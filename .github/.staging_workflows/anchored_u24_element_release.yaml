@@ -53,7 +53,7 @@ jobs:
       - name: Create draft GH release
         id: create_draft_gh_release
         uses: actions/create-release@v1
-        if: ${{inputs.TWINE_REPO}} == "testpypi"
+        if: ${{ inputs.TWINE_REPO == "testpypi" }}
         env:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
         with:
@@ -65,7 +65,7 @@ jobs:
       - name: Create GH release
         id: create_gh_release
         uses: actions/create-release@v1
-        if: ${{inputs.TWINE_REPO}} != "testpypi"
+        if: ${{inputs.TWINE_REPO != "testpypi" }}
         env:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
         with:
