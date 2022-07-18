@@ -4,9 +4,6 @@ on:
     inputs:
       TWINE_REPO:
         type: string
-      DRAFT_RELEASE:
-        required: true
-        type: boolean
     secrets:
       TWINE_USERNAME:
         required: true
@@ -42,9 +39,10 @@ jobs:
         with:
           path: ./CHANGELOG.md
           version: ${{env.PKG_VERSION}}
-      - name: Create GH release
+      - name: Create draft GH release
         id: create_gh_release
         uses: actions/create-release@v1
+        if: ${{inputs.TWINE_REPO}} == "testpypi"
         env:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
         with:
@@ -52,7 +50,19 @@ jobs:
           release_name: Release ${{steps.changelog_reader.outputs.version}}
           body: ${{steps.changelog_reader.outputs.changes}}
           prerelease: ${{steps.changelog_reader.outputs.status == 'prereleased'}}
-          draft: ${inputs.DRAFT_RELEASE}
+          draft: true
+      - name: Create GH release
+        id: create_gh_release
+        uses: actions/create-release@v1
+        if: ${{inputs.TWINE_REPO}} != "testpypi"
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+        with:
+          tag_name: ${{steps.changelog_reader.outputs.version}}
+          release_name: Release ${{steps.changelog_reader.outputs.version}}
+          body: ${{steps.changelog_reader.outputs.changes}}
+          prerelease: ${{steps.changelog_reader.outputs.status == 'prereleased'}}
+          draft: ${{steps.changelog_reader.outputs.status == 'unreleased'}}
       - name: Fetch image artifact
         uses: actions/download-artifact@v2
         with:
@@ -69,7 +79,7 @@ jobs:
           docker load < "image-${{env.PKG_NAME}}-${PKG_VERSION}-py${{inputs.py_ver}}.tar.gz"
           docker-compose -f docker-compose-build.yaml run \
             -e TWINE_USERNAME=${TWINE_USERNAME} -e TWINE_PASSWORD=${TWINE_PASSWORD} element \
-            sh -lc "pip install twine && python -m twine upload --repository ${inputs.TWINE_REPO} dist/*"
+            sh -lc "pip install twine && python -m twine upload --repository ${{inputs.TWINE_REPO}} dist/*"
       - name: Determine pip artifact paths
         run: |
           echo "PKG_WHEEL_PATH=$(ls dist/${PKG_NAME}-*.whl)" >> $GITHUB_ENV
