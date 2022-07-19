@@ -63,7 +63,13 @@ jobs:
           draft: ${{steps.changelog_reader.outputs.status == 'unreleased'}}
       - name: Get release upload url
         id: get_release_upload_url
-        run: "if [ ${{inputs.TWINE_REPO}} -eq \"testpypi\" ] \nthen\n  echo \"::set-output name=upload_url::${{steps.create_draft_gh_release.upload_url}}\"\nelse\n  echo \"::set-output name=upload_url::${{steps.create_gh_release.upload_url}}\"\nif\n"
+        run: |
+          if [ "${{inputs.TWINE_REPO}}" -eq "testpypi" ]
+          then
+            echo "::set-output name=upload_url::${{steps.create_draft_gh_release.upload_url}}"
+          else
+            echo "::set-output name=upload_url::${{steps.create_gh_release.upload_url}}"
+          fi
       - name: Fetch image artifact
         uses: actions/download-artifact@v2
         with:
