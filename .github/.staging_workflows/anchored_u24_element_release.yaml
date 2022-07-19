@@ -128,6 +128,10 @@ jobs:
                archive_format: 'zip',
             });
             var fs = require('fs');
+            var dir = ${{github.workspace}} + '/dist';
+            if (!path.existsSync(dir)) {
+                fs.mkdirSync(dir, 0775);
+            }
             fs.writeFileSync('${{github.workspace}}/dist/pip-${{env.PKG_NAME}}-${{env.PKG_VERSION}}', Buffer.from(download.data));
       - name: Publish pip release
         run: |
