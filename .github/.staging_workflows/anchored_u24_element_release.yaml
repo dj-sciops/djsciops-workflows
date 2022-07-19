@@ -34,11 +34,6 @@ jobs:
     steps:
       - name: Checkout element repo
         uses: actions/checkout@v2
-      - name: Checkout cicd repo
-        uses: actions/checkout@v2
-        with:
-          !!merge <<: *$STAGE-cicd-repo
-          path: 'cicd'
       - uses: actions/setup-python@v4
         with:
           python-version: ${{env.PY_VER}} 
@@ -83,7 +78,7 @@ jobs:
       - name: Get release upload url
         id: get_release_upload_url
         run: |
-          if [ "${{env.TWINE_REPO}}" -eq "testpypi" ]
+          if [ "${{env.TWINE_REPO}}" = "testpypi" ]
           then
             echo "::set-output name=upload_url::${{steps.create_draft_gh_release.upload_url}}"
           else
@@ -108,15 +103,10 @@ jobs:
                archive_format: 'zip',
             });
             var fs = require('fs');
-            var dir = '${{github.workspace}}' + '/dist';
-            if (!fs.existsSync(dir)) {
-                fs.mkdirSync(dir, { recursive: true });
-            }
-            fs.writeFileSync('${{github.workspace}}/dist/pip-${{env.PKG_NAME}}-${{env.PKG_VERSION}}', Buffer.from(download.data));
+            fs.writeFileSync('${{github.workspace}}/pip-${{env.PKG_NAME}}-${{env.PKG_VERSION}}.zip', Buffer.from(download.data));
       - name: Publish pip release
         run: |
-          cp -r ./cicd/docker-template/element_build_release/dist/alpine/* .
-          export HOST_UID=$(id -u)
+          unzip pip-${{env.PKG_NAME}}-${{env.PKG_VERSION}}.zip -d ./dist
           pip install twine && python -m twine upload --repository ${{env.TWINE_REPO}} dist/*
       - name: Determine pip artifact paths
         run: |
