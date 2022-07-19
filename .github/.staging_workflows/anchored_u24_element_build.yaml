@@ -75,7 +75,7 @@ jobs:
           # TAG=$(docker images --filter "reference=datajoint/${PKG_NAME}*" --format "{{.Tag}}")
           # docker save "${IMAGE}:${TAG}" | \
           #   gzip > "image-${PKG_NAME}-${PKG_VERSION}-py${PY_VER}.tar.gz"
-          python setup.py bdist_wheel sdist
+          pip install wheel && python setup.py bdist_wheel sdist
           echo "PKG_NAME=${PKG_NAME}" >> $GITHUB_ENV
           echo "PKG_VERSION=${PKG_VERSION}" >> $GITHUB_ENV
       # - name: Add image artifact
