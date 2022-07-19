@@ -47,6 +47,9 @@ jobs:
         with:
           repository: 'yambottle/djsciops-cicd'
           path: 'cicd'
+      - uses: actions/setup-python@v4
+        with:
+          python-version: ${{env.PY_VER}}
       - name: Compile image
         run: |
           ## Get docker template
@@ -55,20 +58,21 @@ jobs:
           export PKG_NAME=$(python3 -c "print([p for p in __import__('setuptools').find_packages() if '.' not in p][0])")
           export PKG_VERSION=$(cat ${PKG_NAME}/version.py | grep -oP '\d+\.\d+\.[a-z0-9]+')
           export HOST_UID=$(id -u)
-          docker-compose -f docker-compose-build.yaml up --exit-code-from element --build
-          IMAGE=$(docker images --filter "reference=datajoint/${PKG_NAME}*" \
-            --format "{{.Repository}}")
-          TAG=$(docker images --filter "reference=datajoint/${PKG_NAME}*" --format "{{.Tag}}")
-          docker save "${IMAGE}:${TAG}" | \
-            gzip > "image-${PKG_NAME}-${PKG_VERSION}-py${PY_VER}.tar.gz"
+          # docker-compose -f docker-compose-build.yaml up --exit-code-from element --build
+          # IMAGE=$(docker images --filter "reference=datajoint/${PKG_NAME}*" \
+          #   --format "{{.Repository}}")
+          # TAG=$(docker images --filter "reference=datajoint/${PKG_NAME}*" --format "{{.Tag}}")
+          # docker save "${IMAGE}:${TAG}" | \
+          #   gzip > "image-${PKG_NAME}-${PKG_VERSION}-py${PY_VER}.tar.gz"
+          python setup.py bdist_wheel sdist
           echo "PKG_NAME=${PKG_NAME}" >> $GITHUB_ENV
           echo "PKG_VERSION=${PKG_VERSION}" >> $GITHUB_ENV
-      - name: Add image artifact
-        uses: actions/upload-artifact@v2
-        with:
-          name: image-${{env.PKG_NAME}}-${{env.PKG_VERSION}}-py${{env.PY_VER}}
-          path: "image-${{env.PKG_NAME}}-${{env.PKG_VERSION}}-py${{env.PY_VER}}.tar.gz"
-          retention-days: 1
+      # - name: Add image artifact
+      #   uses: actions/upload-artifact@v2
+      #   with:
+      #     name: image-${{env.PKG_NAME}}-${{env.PKG_VERSION}}-py${{env.PY_VER}}
+      #     path: "image-${{env.PKG_NAME}}-${{env.PKG_VERSION}}-py${{env.PY_VER}}.tar.gz"
+      #     retention-days: 1
       - if: ${{ env.PY_VER }} == '3.9'
         name: Add pip artifacts
         uses: actions/upload-artifact@v2
