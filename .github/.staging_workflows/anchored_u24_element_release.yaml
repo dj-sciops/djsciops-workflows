@@ -3,7 +3,10 @@ name: u24_element_release
 on:
   workflow_call:
     inputs:
-      TWINE_REPO:
+      py_ver:
+        type: string
+        required: true
+      twine_repo:
         type: string
     secrets:
       TWINE_USERNAME:
@@ -51,7 +54,7 @@ jobs:
       - name: Create draft GH release
         id: create_draft_gh_release
         uses: actions/create-release@v1
-        if: ${{ contains(inputs.TWINE_REPO, 'testpypi') }}
+        if: ${{ contains(inputs.twine_repo, 'testpypi') }}
         env:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
         with:
@@ -63,7 +66,7 @@ jobs:
       - name: Create GH release
         id: create_gh_release
         uses: actions/create-release@v1
-        if: ${{ !contains(inputs.TWINE_REPO, 'testpypi') }} 
+        if: ${{ !contains(inputs.twine_repo, 'testpypi') }} 
         env:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
         with:
@@ -75,7 +78,7 @@ jobs:
       - name: Get release upload url
         id: get_release_upload_url
         run: |
-          if [ "${{inputs.TWINE_REPO}}" -eq "testpypi" ]
+          if [ "${{inputs.twine_repo}}" -eq "testpypi" ]
           then
             echo "::set-output name=upload_url::${{steps.create_draft_gh_release.upload_url}}"
           else
@@ -97,7 +100,7 @@ jobs:
           docker load < "image-${{env.PKG_NAME}}-${PKG_VERSION}-py${{inputs.py_ver}}.tar.gz"
           docker-compose -f docker-compose-build.yaml run \
             -e TWINE_USERNAME=${TWINE_USERNAME} -e TWINE_PASSWORD=${TWINE_PASSWORD} element \
-            sh -lc "pip install twine && python -m twine upload --repository ${{inputs.TWINE_REPO}} dist/*"
+            sh -lc "pip install twine && python -m twine upload --repository ${{inputs.twine_repo}} dist/*"
       - name: Determine pip artifact paths
         run: |
           echo "PKG_WHEEL_PATH=$(ls dist/${PKG_NAME}-*.whl)" >> $GITHUB_ENV
