@@ -89,31 +89,6 @@ jobs:
           else
             echo "::set-output name=upload_url::${{steps.create_gh_release.upload_url}}"
           fi
-      # - name: Fetch image artifact
-      #   uses: actions/github-script@v3.1.0
-      #   with:
-      #     script: |
-      #       var artifacts = await github.actions.listWorkflowRunArtifacts({
-      #          owner: context.repo.owner,
-      #          repo: context.repo.repo,
-      #          run_id: ${{github.event.workflow_run.id }},
-      #       });
-      #       var matchArtifact = artifacts.data.artifacts.filter((artifact) => {
-      #         return artifact.name == "image-${{env.PKG_NAME}}-${{env.PKG_VERSION}}-py${{env.PY_VER}}"
-      #       })[0];
-      #       var download = await github.actions.downloadArtifact({
-      #          owner: context.repo.owner,
-      #          repo: context.repo.repo,
-      #          artifact_id: matchArtifact.id,
-      #          archive_format: 'zip',
-      #       });
-      #       var fs = require('fs');
-      #       fs.writeFileSync('${{github.workspace}}/image-${{env.PKG_NAME}}-${{env.PKG_VERSION}}-py${{env.PY_VER}}.tar.gz', Buffer.from(download.data));
-      # - name: Fetch pip artifacts
-      #   uses: actions/download-artifact@v2
-      #   with:
-      #     name: pip-${{env.PKG_NAME}}-${{env.PKG_VERSION}}
-      #     path: dist
       - name: Fetch pip artifacts
         uses: actions/github-script@v3.1.0
         with:
@@ -133,7 +108,7 @@ jobs:
                archive_format: 'zip',
             });
             var fs = require('fs');
-            var dir = '${{github.workspace}}'' + '/dist';
+            var dir = '${{github.workspace}}' + '/dist';
             if (!fs.existsSync(dir)) {
                 fs.mkdirSync(dir, { recursive: true });
             }
@@ -142,10 +117,6 @@ jobs:
         run: |
           cp -r ./cicd/docker-template/element_build_release/dist/alpine/* .
           export HOST_UID=$(id -u)
-          # docker load < "image-${{env.PKG_NAME}}-${PKG_VERSION}-py${{env.PY_VER}}.tar.gz"
-          # docker-compose -f docker-compose-build.yaml run \
-          #   -e TWINE_USERNAME=${TWINE_USERNAME} -e TWINE_PASSWORD=${TWINE_PASSWORD} element \
-          #   sh -lc "pip install twine && python -m twine upload --repository ${{env.TWINE_REPO}} dist/*"
           pip install twine && python -m twine upload --repository ${{env.TWINE_REPO}} dist/*
       - name: Determine pip artifact paths
         run: |
