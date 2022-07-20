@@ -127,7 +127,8 @@ jobs:
         run: |-
           if [ "${{env.TWINE_REPO}}" = "testpypi" ]
           then
-            pip install twine && python -m twine upload --repository ${{env.TWINE_REPO}} ./dist/*
+            pip install twine && python -m twine upload --repository ${{env.TWINE_REPO}} ./dist/* 2> error.log
+            cat error.log
           else
             pip install twine && python -m twine upload ./dist/*
           fi
