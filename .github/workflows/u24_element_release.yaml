@@ -124,7 +124,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
       - name: Publish pip release
-        run: |-
+        run: |
           if [ "${{env.TWINE_REPO}}" = "testpypi" ]
           then
             CHECK_404=$(curl -s https://test.pypi.org/project/${{env.SDIST_PKG_NAME}}/${{env.PKG_VERSION}}/ | grep "Page Not Found (404)")
