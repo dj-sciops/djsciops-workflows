@@ -69,9 +69,9 @@ jobs:
         run: |
           if [ "${{env.TWINE_REPO}}" = "testpypi" ]
           then
-            echo "::set-output name=upload_url::${{steps.create_draft_gh_release.upload_url}}"
+            echo "UPLOAD_URL=${{steps.create_draft_gh_release.upload_url}}" >> $GITHUB_ENV
           else
-            echo "::set-output name=upload_url::${{steps.create_gh_release.upload_url}}"
+            echo "UPLOAD_URL${{steps.create_gh_release.upload_url}}" >> $GITHUB_ENV
           fi
       - name: Fetch pip artifacts
         uses: actions/github-script@v3.1.0
@@ -103,7 +103,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
         with:
-          upload_url: ${{steps.get_release_upload_url.outputs.upload_url}}
+          upload_url: ${{env.UPLOAD_URL}}
           asset_path: ${{env.PKG_WHEEL_PATH}}
           asset_name: pip-${{env.PKG_NAME}}-${{env.PKG_VERSION}}.whl
           asset_content_type: application/zip
@@ -112,7 +112,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
         with:
-          upload_url: ${{steps.get_release_upload_url.outputs.upload_url}}
+          upload_url: ${{env.UPLOAD_URL}}
           asset_path: ${{env.PKG_SDIST_PATH}}
           asset_name: pip-${{env.SDIST_PKG_NAME}}-${{env.PKG_VERSION}}.tar.gz
           asset_content_type: application/gzip
