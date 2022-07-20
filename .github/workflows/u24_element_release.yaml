@@ -117,6 +117,7 @@ jobs:
           asset_name: pip-${{env.SDIST_PKG_NAME}}-${{env.PKG_VERSION}}.tar.gz
           asset_content_type: application/gzip
       - name: Delete drafts
+        if: always()
         uses: hugo19941994/delete-draft-releases@v1.0.0
         with:
           threshold: 7d
