@@ -93,17 +93,9 @@ jobs:
             });
             var fs = require('fs');
             fs.writeFileSync('${{github.workspace}}/pip-${{env.PKG_NAME}}-${{env.PKG_VERSION}}.zip', Buffer.from(download.data));
-      - name: Publish pip release
-        run: |
-          unzip pip-${{env.PKG_NAME}}-${{env.PKG_VERSION}}.zip -d ./dist
-          if [ "${{env.TWINE_REPO}}" = "testpypi" ]
-          then
-            pip install twine && python -m twine upload --repository ${{env.TWINE_REPO}} ./dist/*
-          else
-            pip install twine && python -m twine upload ./dist/*
-          fi
       - name: Determine pip artifact paths
         run: |
+          unzip pip-${{env.PKG_NAME}}-${{env.PKG_VERSION}}.zip -d ./dist
           echo "PKG_WHEEL_PATH=$(ls dist/${PKG_NAME}-*.whl)" >> $GITHUB_ENV
           echo "PKG_SDIST_PATH=$(ls dist/${SDIST_PKG_NAME}-*.tar.gz)" >> $GITHUB_ENV
       - name: Upload pip wheel asset to release
@@ -130,3 +122,11 @@ jobs:
           threshold: 7d
         env:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+      - name: Publish pip release
+        run: |-
+          if [ "${{env.TWINE_REPO}}" = "testpypi" ]
+          then
+            pip install twine && python -m twine upload --repository ${{env.TWINE_REPO}} ./dist/*
+          else
+            pip install twine && python -m twine upload ./dist/*
+          fi
