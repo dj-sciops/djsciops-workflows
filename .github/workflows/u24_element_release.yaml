@@ -69,9 +69,9 @@ jobs:
         run: |
           if [ "${{env.TWINE_REPO}}" = "testpypi" ]
           then
-            echo "UPLOAD_URL=${{steps.create_draft_gh_release.upload_url}}" >> $GITHUB_ENV
+            echo "UPLOAD_URL=${{steps.create_draft_gh_release.outputs.upload_url}}" >> $GITHUB_ENV
           else
-            echo "UPLOAD_URL${{steps.create_gh_release.upload_url}}" >> $GITHUB_ENV
+            echo "UPLOAD_URL${{steps.create_gh_release.outputs.upload_url}}" >> $GITHUB_ENV
           fi
       - name: Fetch pip artifacts
         uses: actions/github-script@v3.1.0
@@ -120,7 +120,7 @@ jobs:
         if: always()
         uses: hugo19941994/delete-draft-releases@v1.0.0
         with:
-          threshold: 7d
+          threshold: 1s
         env:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
       - name: Publish pip release
