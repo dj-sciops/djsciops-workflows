@@ -128,7 +128,7 @@ jobs:
           if [ "${{env.TWINE_REPO}}" = "testpypi" ]
           then
             CHECK_NOT_EXIST=$(curl https://test.pypi.org/project/${{env.SDIST_PKG_NAME}}/${{env.PKG_VERSION}}/ | grep "Page Not Found (404)")
-            if [ -z CHECK_NOT_EXIST]
+            if [ -z CHECK_NOT_EXIST ]
             then
               pip install twine && python -m twine upload --repository ${{env.TWINE_REPO}} ./dist/*
             else
