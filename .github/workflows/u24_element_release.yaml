@@ -127,7 +127,7 @@ jobs:
         run: |-
           if [ "${{env.TWINE_REPO}}" = "testpypi" ]
           then
-            CHECK_404=$(curl https://test.pypi.org/project/${{env.SDIST_PKG_NAME}}/${{env.PKG_VERSION}}/ | grep "Page Not Found (404)")
+            CHECK_404=$(curl -s https://test.pypi.org/project/${{env.SDIST_PKG_NAME}}/${{env.PKG_VERSION}}/ | grep "Page Not Found (404)")
             if [ ! -z "$CHECK_404" ]
             then
               pip install twine && python -m twine upload --repository ${{env.TWINE_REPO}} ./dist/*
