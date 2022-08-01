@@ -71,7 +71,7 @@ jobs:
           then
             echo "UPLOAD_URL=${{steps.create_draft_gh_release.outputs.upload_url}}" >> $GITHUB_ENV
           else
-            echo "UPLOAD_URL${{steps.create_gh_release.outputs.upload_url}}" >> $GITHUB_ENV
+            echo "UPLOAD_URL=${{steps.create_gh_release.outputs.upload_url}}" >> $GITHUB_ENV
           fi
       - name: Fetch pip artifacts
         uses: actions/github-script@v3.1.0
