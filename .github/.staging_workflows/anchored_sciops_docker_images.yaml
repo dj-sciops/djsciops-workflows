@@ -203,8 +203,9 @@ jobs:
         run: |
           cd ./docker
 
-          find . -maxdepth 1 -type d \( -iname "*" ! -iname "*local*" \) | awk "NR>1" | cut -d/ -f2 | while read DIR;
-          do
+          find . -maxdepth 1 -type d \( -iname "*" ! -iname "*local*" \) | awk "NR>1" | cut -d/ -f2 | while read DIR; do
+            echo "::debug::Searching for a docker-compose file in ${DIR}"
+            (
               cd ${DIR};
               set -a;
               source build.env;
@@ -223,4 +224,5 @@ jobs:
                       && docker push "${IMAGE}:latest" \
                       && echo "pushed 'latest' tag..." \
                   || echo "skipping 'latest' tag..."
+            )
           done
