@@ -57,10 +57,10 @@ jobs:
         name: Build codebook env image
         run: |
           ## Get docker template
-          cp -r ./cicd/docker-template/codebook_env ./main/docker/
+          cp -r ./cicd/docker-template/sciops_codebook_env ./main/docker/
 
           ## Get build info
-          cd ./main/docker/codebook_env
+          cd ./main/docker/sciops_codebook_env
           export REPO_NAME=${{github.event.repository.name}}
           export REPO_OWNER=${{github.repository_owner}}
 

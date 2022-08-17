@@ -11,7 +11,6 @@ services:
         - PY_VER
         - DIST
         - CODEBOOK_BASE_HASH
-        - DEPLOY_KEY
         - REPO_OWNER
         - REPO_NAME
-    image: registry.vathes.com/sciops/codebook_${REPO_NAME}:jhub${JHUB_VER}-py${PY_VER}-${DIST}-${WORKFLOW_VERSION}
+    image: registry.vathes.com/datajoint/codebook_${REPO_NAME}:jhub${JHUB_VER}-py${PY_VER}-${DIST}-${WORKFLOW_VERSION}
