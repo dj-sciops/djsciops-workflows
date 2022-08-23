@@ -15,9 +15,6 @@ on:
       codebook_base_hash:
         required: true
         type: string
-      workflow_version:
-        required: true
-        type: string
 
 anchor-dev-cicd-repo: &dev-cicd-repo
   repository: 'yambottle/djsciops-cicd'
@@ -42,7 +39,6 @@ jobs:
       PY_VER: ${{inputs.py_ver}}
       DIST: ${{inputs.dist}}
       CODEBOOK_BASE_IMAGE: ${{inputs.codebook_base_image}}
-      WORKFLOW_VERSION: ${{inputs.workflow_version}}
     steps:
       - name: Checkout workflow repo
         uses: actions/checkout@v3
@@ -61,7 +57,10 @@ jobs:
 
           ## Get build info
           (
-            cd ./main/docker/sciops_codebook_env
+            cd ./main
+            export WORKFLOW_VERSION=$(cat ${PKG_NAME}/version.py | grep -oP '\d+\.\d+\.[a-z0-9]+')
+
+            cd ./docker/sciops_codebook_env
             export REPO_NAME=$(echo ${{github.repository}} | awk -F\/ '{print $2}')
             export REPO_OWNER=${{github.repository_owner}}
 
