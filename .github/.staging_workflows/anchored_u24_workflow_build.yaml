@@ -71,7 +71,7 @@ jobs:
           
           docker save \
             -o image-codebook-${REPO_NAME}-jhub${JHUB_VER}-py${PY_VER}-${DIST}-${WORKFLOW_VERSION}.tar \
-            "${{github.repository_owner}}/codebook_${REPO_NAME}:jhub${JHUB_VER}-py${PY_VER}-${DIST}-${WORKFLOW_VERSION}"
+            "datajoint/codebook_${REPO_NAME}:jhub${JHUB_VER}-py${PY_VER}-${DIST}-${WORKFLOW_VERSION}"
           gzip -S ".gz" image-codebook-${REPO_NAME}-jhub${JHUB_VER}-py${PY_VER}-${DIST}-${WORKFLOW_VERSION}.tar
     #   - name: Add codebook env image archive to Artifact
     #     uses: actions/upload-artifact@v2
