@@ -21,7 +21,7 @@ jobs:
       JHUB_VER: ${{inputs.jhub_ver}}
       PY_VER: ${{inputs.py_ver}}
       DIST: ${{inputs.dist}}
-      CODEBOOK_BASE_IMAGE: ${{inputs.codebook_base_image}}
+      CODEBOOK_BASE_IMAGE: ${{inputs.codebook_base_hash}}
     steps:
       - name: Checkout workflow repo
         uses: actions/checkout@v3
