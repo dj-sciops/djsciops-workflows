@@ -21,7 +21,7 @@ jobs:
       JHUB_VER: ${{inputs.jhub_ver}}
       PY_VER: ${{inputs.py_ver}}
       DIST: ${{inputs.dist}}
-      CODEBOOK_BASE_IMAGE: ${{inputs.codebook_base_hash}}
+      CODEBOOK_BASE_HASH: ${{inputs.codebook_base_hash}}
     steps:
       - name: Checkout workflow repo
         uses: actions/checkout@v3
@@ -41,6 +41,7 @@ jobs:
           ## Get build info
           (
             cd ./main
+            export PACKAGE_DIR=$(ls | grep workflow)
             export WORKFLOW_VERSION=$(cat ${PKG_NAME}/version.py | grep -oP '\d+\.\d+\.[a-z0-9]+')
 
             cd ./docker/sciops_codebook_env
