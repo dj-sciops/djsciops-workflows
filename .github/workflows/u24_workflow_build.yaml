@@ -36,7 +36,7 @@ jobs:
         name: Build codebook env image
         run: |
           ## Get docker template
-          cp -r ./cicd/docker-template/sciops_codebook_env ./main/docker/
+          cp -r ./cicd/docker-template/u24_codebook_env ./main/docker/
 
           ## Get build info
           (
@@ -44,7 +44,7 @@ jobs:
             export PACKAGE_DIR=$(ls | grep workflow)
             export WORKFLOW_VERSION=$(cat ${PKG_NAME}/version.py | grep -oP '\d+\.\d+\.[a-z0-9]+')
 
-            cd ./docker/sciops_codebook_env
+            cd ./docker/u24_codebook_env
             export REPO_NAME=$(echo ${{github.repository}} | awk -F\/ '{print $2}')
             export REPO_OWNER=${{github.repository_owner}}
 
