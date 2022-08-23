@@ -1,0 +1,68 @@
+name: u24_workflow_build
+on:
+  workflow_call:
+    inputs:
+      jhub_ver:
+        required: true
+        type: string
+      py_ver:
+        required: true
+        type: string
+      dist:
+        required: true
+        type: string
+      codebook_base_hash:
+        required: true
+        type: string
+      workflow_version:
+        required: true
+        type: string
+jobs:
+  build_env_image:
+    runs-on: ubuntu-latest
+    env:
+      JHUB_VER: ${{inputs.jhub_ver}}
+      PY_VER: ${{inputs.py_ver}}
+      DIST: ${{inputs.dist}}
+      CODEBOOK_BASE_IMAGE: ${{inputs.codebook_base_image}}
+      WORKFLOW_VERSION: ${{inputs.workflow_version}}
+    steps:
+      - name: Checkout workflow repo
+        uses: actions/checkout@v3
+        with:
+          path: 'main'
+      - name: Checkout cicd repo that has common docker template
+        uses: actions/checkout@v3
+        with:
+          repository: 'yambottle/djsciops-cicd'
+          path: 'cicd'
+      - id: build_env
+        name: Build codebook env image
+        run: |
+          ## Get docker template
+          cp -r ./cicd/docker-template/sciops_codebook_env ./main/docker/
+
+          ## Get build info
+          (
+            cd ./main/docker/sciops_codebook_env
+            export REPO_NAME=$(echo ${{github.repository}} | awk -F\/ '{print $2}')
+            export REPO_OWNER=${{github.repository_owner}}
+
+            ## Build image
+            docker-compose -f ./dist/${DIST}/docker-compose-codebook_env.yaml build
+          )
+
+          docker save \
+            -o image-codebook-${REPO_NAME}-jhub${JHUB_VER}-py${PY_VER}-${DIST}-${WORKFLOW_VERSION}.tar \
+            "${{github.repository_owner}}/codebook_${REPO_NAME}:jhub${JHUB_VER}-py${PY_VER}-${DIST}-${WORKFLOW_VERSION}"
+          gzip -S ".gz" image-codebook-${REPO_NAME}-jhub${JHUB_VER}-py${PY_VER}-${DIST}-${WORKFLOW_VERSION}.tar
+        #   - name: Add codebook env image archive to Artifact
+        #     uses: actions/upload-artifact@v2
+        #     with:
+        #       name: "image-codebook-${{steps.compile_env.outputs.repo_name}}\
+        #         -jhub${{env.JHUB_VER}}-py${{env.PY_VER}}-${{env.DIST}}-${{env.WORKFLOW_VERSION}}"
+        #       path: "image-codebook-${{steps.compile_env.outputs.repo_name}}\
+        #         -jhub${{env.JHUB_VER}}-py${{env.PY_VER}}-${{env.DIST}}-${{env.WORKFLOW_VERSION}}.tar.gz"
+        #       !!merge <<: *dev-retention
+        # outputs:
+        #   repo_name: ${{steps.compile_env.outputs.repo_name}}

@@ -19,7 +19,7 @@ on:
       dist:
         required: true
         type: string
-      env_base_hash:
+      codebook_base_hash:
         required: true
         type: string
       workflow_version:
@@ -66,7 +66,7 @@ anchor-prod-artifact-retention: &prod-retention
 ### Common Anchor
 anchor-docker-login: &docker-login
   with:
-    registry: registry.vathes.com
+    registry: docker.io
     username: ${{ secrets.REGISTRY_USERNAME }}
     password: ${{ secrets.REGISTRY_PASSWORD }}
 
