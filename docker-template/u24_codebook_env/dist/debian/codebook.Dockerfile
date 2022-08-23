@@ -7,25 +7,24 @@ ARG DIST
 ARG CODEBOOK_BASE_HASH
 FROM datajoint/djlabhub:${JHUB_VER}-py${PY_VER}-${DIST}-${CODEBOOK_BASE_HASH}
 
-# ARG DEPLOY_KEY
-# COPY --chown=anaconda $DEPLOY_KEY $HOME/.ssh/id_ed25519
-# RUN chmod u=r,g-rwx,o-rwx $HOME/.ssh/id_ed25519 && \
-#     printf "ssh\ngit" >> /tmp/apt_requirements.txt && \
-#     /entrypoint.sh echo "installed"
-
 RUN printf "git" >> /tmp/apt_requirements.txt && \
     /entrypoint.sh echo "installed"
+
+USER root
+RUN mkdir /home/user_data && \
+    chown -R anaconda:anaconda /home/user_data && \
+    chmod -R 775 /home/user_data
+USER anaconda
 
 ARG REPO_OWNER
 ARG REPO_NAME
 WORKDIR /tmp
 RUN git clone https://github.com/${REPO_OWNER}/${REPO_NAME} && \
-    pip install ./${REPO_NAME} 
-    # && \
-    # cp -r ./${REPO_NAME}/notebooks/ /home/ && \
-    # cp -r ./${REPO_NAME}/images/ /home/notebooks/ || true && \
-    # cp -r ./${REPO_NAME}/user_data/ /home/ && \
-    # cp ./${REPO_NAME}/README.md /home/notebooks/ && \
-    # rm -rf /tmp/${REPO_NAME}
+    pip install ./${REPO_NAME} && \
+    cp -r ./${REPO_NAME}/notebooks/ /home && \
+    cp -r ./${REPO_NAME}/images/ /home/notebooks/ || true && \
+    cp ./${REPO_NAME}/README.md /home/notebooks/ && \
+    cp -r ./${REPO_NAME}/user_data/ /home || true && \
+    rm -rf /tmp/${REPO_NAME}
 
-WORKDIR /home/notebooks
+WORKDIR /home
