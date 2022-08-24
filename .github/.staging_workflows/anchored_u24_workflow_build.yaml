@@ -72,13 +72,14 @@ jobs:
             -o image-codebook-${REPO_NAME}-jhub${JHUB_VER}-py${PY_VER}-${DIST}-${WORKFLOW_VERSION}.tar \
             "datajoint/codebook_${REPO_NAME}:jhub${JHUB_VER}-py${PY_VER}-${DIST}-${WORKFLOW_VERSION}"
           gzip -S ".gz" image-codebook-${REPO_NAME}-jhub${JHUB_VER}-py${PY_VER}-${DIST}-${WORKFLOW_VERSION}.tar
+
+          echo "::set-output name=repo_name::${REPO_NAME}"
+          echo "::set-output name=workflow_version::${WORKFLOW_VERSION}"
       - name: Add codebook env image archive to Artifact
         uses: actions/upload-artifact@v2
         with:
-          name: "image-codebook-${{steps.compile_env.outputs.repo_name}}\
-            -jhub${{env.JHUB_VER}}-py${{env.PY_VER}}-${{env.DIST}}-${{env.WORKFLOW_VERSION}}"
-          path: "image-codebook-${{steps.compile_env.outputs.repo_name}}\
-            -jhub${{env.JHUB_VER}}-py${{env.PY_VER}}-${{env.DIST}}-${{env.WORKFLOW_VERSION}}.tar.gz"
+          name: "image-codebook-${{steps.build_env.outputs.repo_name}}\
+            -jhub${{env.JHUB_VER}}-py${{env.PY_VER}}-${{env.DIST}}-${{steps.build_env.outputs.workflow_version}}"
+          path: "image-codebook-${{steps.build_env.outputs.repo_name}}\
+            -jhub${{env.JHUB_VER}}-py${{env.PY_VER}}-${{env.DIST}}-${{steps.build_env.outputs.workflow_version}}.tar.gz"
           !!merge <<: *$STAGE-retention
-    outputs:
-      repo_name: ${{steps.compile_env.outputs.repo_name}}
