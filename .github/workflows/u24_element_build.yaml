@@ -12,7 +12,8 @@ jobs:
   test-changelog:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout element repo
+        uses: actions/checkout@v3
       - name: Get changelog entry
         id: changelog_reader
         uses: guzman-raphael/changelog-reader-action@v5
@@ -41,7 +42,7 @@ jobs:
       COMPOSE_HTTP_TIMEOUT: "120"
     steps:
       - name: Checkout element repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
           python-version: ${{env.PY_VER}}
