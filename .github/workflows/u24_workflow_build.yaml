@@ -88,3 +88,15 @@ jobs:
           name: "image-codebook-${{steps.build_env.outputs.repo_name}}-jhub${{env.JHUB_VER}}-py${{env.PY_VER}}-${{env.DIST}}-${{steps.build_env.outputs.workflow_version}}"
           path: "image-codebook-${{steps.build_env.outputs.repo_name}}-jhub${{env.JHUB_VER}}-py${{env.PY_VER}}-${{env.DIST}}-${{steps.build_env.outputs.workflow_version}}.tar.gz"
           retention-days: 90
+  test_image:
+    runs-on: ubuntu-latest
+      - name: Download artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: "image-codebook-${{steps.build_env.outputs.repo_name}}-jhub${{env.JHUB_VER}}-py${{env.PY_VER}}-${{env.DIST}}-${{steps.build_env.outputs.workflow_version}}"
+          path: /tmp
+      - name: Load image
+        run: |
+          docker load --input /tmp/image-codebook-${{steps.build_env.outputs.repo_name}}-jhub${{env.JHUB_VER}}-py${{env.PY_VER}}-${{env.DIST}}-${{steps.build_env.outputs.workflow_version}}.tar.gz
+          docker image ls -a
+
