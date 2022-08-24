@@ -53,22 +53,21 @@ jobs:
         name: Build codebook env image
         run: |
           ## Get docker template
-          cp -r ./cicd/docker-template/u24_codebook_env ./main/docker/
+          cp -r ${GITHUB_WORKSPACE}/cicd/docker-template/u24_codebook_env ./main/docker/
 
           ## Get build info
-          (
-            cd ./main
-            export PKG_NAME=$(ls | grep workflow)
-            export WORKFLOW_VERSION=$(cat ${PKG_NAME}/version.py | grep -oP '\d+\.\d+\.[a-z0-9]+')
+          cd ${GITHUB_WORKSPACE}/main
+          export PKG_NAME=$(ls | grep workflow)
+          export WORKFLOW_VERSION=$(cat ${PKG_NAME}/version.py | grep -oP '\d+\.\d+\.[a-z0-9]+')
 
-            cd ./docker/u24_codebook_env
-            export REPO_NAME=$(echo ${{github.repository}} | awk -F\/ '{print $2}')
-            export REPO_OWNER=${{github.repository_owner}}
+          cd ${GITHUB_WORKSPACE}/main/docker/u24_codebook_env
+          export REPO_NAME=$(echo ${{github.repository}} | awk -F\/ '{print $2}')
+          export REPO_OWNER=${{github.repository_owner}}
 
-            ## Build image
-            docker-compose -f ./dist/${DIST}/docker-compose-codebook_env.yaml build
-          )
-          
+          ## Build image
+          docker-compose -f ${GITHUB_WORKSPACE}/main/docker/u24_codebook_env/dist/${DIST}/docker-compose-codebook_env.yaml build
+
+          cd ${GITHUB_WORKSPACE}
           docker save \
             -o image-codebook-${REPO_NAME}-jhub${JHUB_VER}-py${PY_VER}-${DIST}-${WORKFLOW_VERSION}.tar \
             "datajoint/codebook_${REPO_NAME}:jhub${JHUB_VER}-py${PY_VER}-${DIST}-${WORKFLOW_VERSION}"
