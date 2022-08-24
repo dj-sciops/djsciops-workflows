@@ -73,7 +73,8 @@ jobs:
             var download = await github.actions.downloadArtifact({
                owner: context.repo.owner,
                repo: context.repo.repo,
-               artifact_id: matchArtifact.id
+               artifact_id: matchArtifact.id,
+               archive_format: 'zip',
             });
             var fs = require('fs');
             fs.writeFileSync('image-codebook-${{steps.get_meta.outputs.repo_name}}-jhub${{env.JHUB_VER}}-py${{env.PY_VER}}-${{env.DIST}}-${{steps.get_meta.outputs.workflow_version}}.tar', Buffer.from(download.data));
