@@ -15,6 +15,29 @@ on:
         required: true
         type: string
 jobs:
+  test-changelog:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout element repo
+        uses: actions/checkout@v3
+      - name: Get changelog entry
+        id: changelog_reader
+        uses: guzman-raphael/changelog-reader-action@v5
+        with:
+          path: ./CHANGELOG.md
+      - name: Verify changelog parsing
+        env:
+          TAG_NAME: ${{steps.changelog_reader.outputs.version}}
+          RELEASE_NAME: Release ${{steps.changelog_reader.outputs.version}}
+          BODY: ${{steps.changelog_reader.outputs.changes}}
+          PRERELEASE: ${{steps.changelog_reader.outputs.status == 'prereleased'}}
+          DRAFT: ${{steps.changelog_reader.outputs.status == 'unreleased'}}
+        run: |
+          echo "TAG_NAME=${TAG_NAME}"
+          echo "RELEASE_NAME=${RELEASE_NAME}"
+          echo "BODY=${BODY}"
+          echo "PRERELEASE=${PRERELEASE}"
+          echo "DRAFT=${DRAFT}"
   build_env_image:
     runs-on: ubuntu-latest
     env:
