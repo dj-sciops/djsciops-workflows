@@ -63,4 +63,4 @@ jobs:
         with:
           name: "image-codebook-${{steps.build_env.outputs.repo_name}}-jhub${{env.JHUB_VER}}-py${{env.PY_VER}}-${{env.DIST}}-${{steps.build_env.outputs.workflow_version}}"
           path: "image-codebook-${{steps.build_env.outputs.repo_name}}-jhub${{env.JHUB_VER}}-py${{env.PY_VER}}-${{env.DIST}}-${{steps.build_env.outputs.workflow_version}}.tar.gz"
-          retention-days: 1
+          retention-days: 90
