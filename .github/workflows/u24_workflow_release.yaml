@@ -94,7 +94,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
         with:
-          upload_url: ${{steps.create_gh_release.outputs..upload_url}}
+          upload_url: ${{steps.create_gh_release.outputs.upload_url}}
           asset_path: "image-codebook-${{steps.get_meta.outputs.repo_name}}-jhub${{env.JHUB_VER}}-py${{env.PY_VER}}-${{env.DIST}}-${{steps.get_meta.outputs.workflow_version}}.tar.gz"
           asset_name: "image-codebook-${{steps.get_meta.outputs.repo_name}}-jhub${{env.JHUB_VER}}-py${{env.PY_VER}}-${{env.DIST}}-${{steps.get_meta.outputs.workflow_version}}.tar.gz"
           asset_content_type: application/gzip
