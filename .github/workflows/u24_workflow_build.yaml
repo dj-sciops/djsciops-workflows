@@ -30,6 +30,7 @@ jobs:
       - name: Checkout cicd repo that has common docker template
         uses: actions/checkout@v3
         with:
+          ## change to Prod owner
           repository: 'yambottle/djsciops-cicd'
           path: 'cicd'
       - id: build_env
