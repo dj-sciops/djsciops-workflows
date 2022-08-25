@@ -1,0 +1,76 @@
+name: u24_workflow_build
+on:
+  workflow_call:
+    inputs:
+      jhub_ver:
+        required: true
+        type: string
+      py_ver:
+        required: true
+        type: string
+      dist:
+        required: true
+        type: string
+      codebook_base_hash:
+        required: true
+        type: string
+jobs:
+  test-changelog:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout element repo
+        uses: actions/checkout@v3
+      - name: Get changelog entry
+        id: changelog_reader
+        uses: guzman-raphael/changelog-reader-action@v5
+        with:
+          path: ./CHANGELOG.md
+      - name: Verify changelog parsing
+        env:
+          TAG_NAME: ${{steps.changelog_reader.outputs.version}}
+          RELEASE_NAME: Release ${{steps.changelog_reader.outputs.version}}
+          BODY: ${{steps.changelog_reader.outputs.changes}}
+          PRERELEASE: ${{steps.changelog_reader.outputs.status == 'prereleased'}}
+          DRAFT: ${{steps.changelog_reader.outputs.status == 'unreleased'}}
+        run: |
+          echo "TAG_NAME=${TAG_NAME}"
+          echo "RELEASE_NAME=${RELEASE_NAME}"
+          echo "BODY=${BODY}"
+          echo "PRERELEASE=${PRERELEASE}"
+          echo "DRAFT=${DRAFT}"
+  build_env_image:
+    runs-on: ubuntu-latest
+    needs: test-changelog
+    env:
+      JHUB_VER: ${{inputs.jhub_ver}}
+      PY_VER: ${{inputs.py_ver}}
+      DIST: ${{inputs.dist}}
+      CODEBOOK_BASE_HASH: ${{inputs.codebook_base_hash}}
+    steps:
+      - name: Checkout workflow repo
+        uses: actions/checkout@v3
+        with:
+          path: 'main'
+      - name: Checkout cicd repo that has common docker template
+        uses: actions/checkout@v3
+        with:
+          ## change to Prod owner
+          repository: 'dj-sciops/djsciops-cicd'
+          path: 'cicd'
+      - id: build_env
+        name: Build codebook env image
+        run: |
+          ## Get docker template
+          cp -r ${GITHUB_WORKSPACE}/cicd/docker-template/u24_codebook_env ./main/docker/
+
+          echo "INFO :: Get build info"
+          cd ${GITHUB_WORKSPACE}/main
+          export PKG_NAME=$(ls | grep workflow)
+          export WORKFLOW_VERSION=$(cat ${PKG_NAME}/version.py | grep -oP '\d+\.\d+\.[a-z0-9]+')
+          cd ${GITHUB_WORKSPACE}/main/docker/u24_codebook_env
+          export REPO_NAME=$(echo ${{github.repository}} | awk -F\/ '{print $2}')
+          export REPO_OWNER=${{github.repository_owner}}
+
+          echo "INFO :: Build image"
+          docker-compose -f ${GITHUB_WORKSPACE}/main/docker/u24_codebook_env/dist/${DIST}/docker-compose-codebook_env.yaml build
+
