@@ -37,7 +37,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           ## change to Prod owner
-          repository: 'yambottle/djsciops-cicd'
+          repository: 'dj-sciops/djsciops-cicd'
           path: 'cicd'
       - id: build_env
         name: Build codebook env image
