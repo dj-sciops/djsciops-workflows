@@ -74,39 +74,39 @@ jobs:
           echo "INFO :: Build image"
           docker-compose -f ${GITHUB_WORKSPACE}/main/docker/u24_codebook_env/dist/${DIST}/docker-compose-codebook_env.yaml build
 
-          echo "INFO :: Compress image"
-          cd ${GITHUB_WORKSPACE}
-          docker save \
-            -o image-codebook-${REPO_NAME}-jhub${JHUB_VER}-py${PY_VER}-${DIST}-${WORKFLOW_VERSION}.tar \
-            "datajoint/codebook_${REPO_NAME}:jhub${JHUB_VER}-py${PY_VER}-${DIST}-${WORKFLOW_VERSION}"
-          gzip -S ".gz" image-codebook-${REPO_NAME}-jhub${JHUB_VER}-py${PY_VER}-${DIST}-${WORKFLOW_VERSION}.tar
+  #         echo "INFO :: Compress image"
+  #         cd ${GITHUB_WORKSPACE}
+  #         docker save \
+  #           -o image-codebook-${REPO_NAME}-jhub${JHUB_VER}-py${PY_VER}-${DIST}-${WORKFLOW_VERSION}.tar \
+  #           "datajoint/codebook_${REPO_NAME}:jhub${JHUB_VER}-py${PY_VER}-${DIST}-${WORKFLOW_VERSION}"
+  #         gzip -S ".gz" image-codebook-${REPO_NAME}-jhub${JHUB_VER}-py${PY_VER}-${DIST}-${WORKFLOW_VERSION}.tar
 
-          echo "::set-output name=repo_name::${REPO_NAME}"
-          echo "::set-output name=workflow_version::${WORKFLOW_VERSION}"
-      - name: Add codebook env image archive to Artifact
-        uses: actions/upload-artifact@v2
-        with:
-          name: "image-codebook-${{steps.build_env.outputs.repo_name}}-jhub${{env.JHUB_VER}}-py${{env.PY_VER}}-${{env.DIST}}-${{steps.build_env.outputs.workflow_version}}"
-          path: "image-codebook-${{steps.build_env.outputs.repo_name}}-jhub${{env.JHUB_VER}}-py${{env.PY_VER}}-${{env.DIST}}-${{steps.build_env.outputs.workflow_version}}.tar.gz"
-          retention-days: 90
-    outputs:
-      repo_name: ${{steps.build_env.outputs.repo_name}}
-      workflow_version: ${{steps.build_env.outputs.workflow_version}}
-  test_image:
-    runs-on: ubuntu-latest
-    needs: build_env_image
-    env:
-      JHUB_VER: ${{inputs.jhub_ver}}
-      PY_VER: ${{inputs.py_ver}}
-      DIST: ${{inputs.dist}}
-    steps:
-      - name: Download artifact
-        uses: actions/download-artifact@v3
-        with:
-          name: "image-codebook-${{needs.build_env_image.outputs.repo_name}}-jhub${{env.JHUB_VER}}-py${{env.PY_VER}}-${{env.DIST}}-${{needs.build_env_image.outputs.workflow_version}}"
-          path: /tmp
-      - name: Load image
-        run: |
-          docker load --input /tmp/image-codebook-${{needs.build_env_image.outputs.repo_name}}-jhub${{env.JHUB_VER}}-py${{env.PY_VER}}-${{env.DIST}}-${{needs.build_env_image.outputs.workflow_version}}.tar.gz
-          docker image ls -a
+  #         echo "::set-output name=repo_name::${REPO_NAME}"
+  #         echo "::set-output name=workflow_version::${WORKFLOW_VERSION}"
+  #     - name: Add codebook env image archive to Artifact
+  #       uses: actions/upload-artifact@v2
+  #       with:
+  #         name: "image-codebook-${{steps.build_env.outputs.repo_name}}-jhub${{env.JHUB_VER}}-py${{env.PY_VER}}-${{env.DIST}}-${{steps.build_env.outputs.workflow_version}}"
+  #         path: "image-codebook-${{steps.build_env.outputs.repo_name}}-jhub${{env.JHUB_VER}}-py${{env.PY_VER}}-${{env.DIST}}-${{steps.build_env.outputs.workflow_version}}.tar.gz"
+  #         retention-days: 90
+  #   outputs:
+  #     repo_name: ${{steps.build_env.outputs.repo_name}}
+  #     workflow_version: ${{steps.build_env.outputs.workflow_version}}
+  # test_image:
+  #   runs-on: ubuntu-latest
+  #   needs: build_env_image
+  #   env:
+  #     JHUB_VER: ${{inputs.jhub_ver}}
+  #     PY_VER: ${{inputs.py_ver}}
+  #     DIST: ${{inputs.dist}}
+  #   steps:
+  #     - name: Download artifact
+  #       uses: actions/download-artifact@v3
+  #       with:
+  #         name: "image-codebook-${{needs.build_env_image.outputs.repo_name}}-jhub${{env.JHUB_VER}}-py${{env.PY_VER}}-${{env.DIST}}-${{needs.build_env_image.outputs.workflow_version}}"
+  #         path: /tmp
+  #     - name: Load image
+  #       run: |
+  #         docker load --input /tmp/image-codebook-${{needs.build_env_image.outputs.repo_name}}-jhub${{env.JHUB_VER}}-py${{env.PY_VER}}-${{env.DIST}}-${{needs.build_env_image.outputs.workflow_version}}.tar.gz
+  #         docker image ls -a
 
