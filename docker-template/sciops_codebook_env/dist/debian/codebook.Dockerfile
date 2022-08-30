@@ -11,6 +11,7 @@ ARG DEPLOY_KEY
 COPY --chown=anaconda $DEPLOY_KEY $HOME/.ssh/id_ed25519
 RUN chmod u=r,g-rwx,o-rwx $HOME/.ssh/id_ed25519 && \
     printf "ssh\ngit" >> /tmp/apt_requirements.txt && \
+    chmod u=rw,g=rw,o=r /tmp/apt_requirements.txt && \
     /entrypoint.sh echo "installed"
 
 ARG REPO_OWNER
