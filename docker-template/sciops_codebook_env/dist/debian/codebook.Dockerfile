@@ -4,8 +4,7 @@
 ARG JHUB_VER
 ARG PY_VER
 ARG DIST
-ARG CODEBOOK_BASE_HASH
-FROM datajoint/djlabhub:${JHUB_VER}-py${PY_VER}-${DIST}-${CODEBOOK_BASE_HASH}
+FROM datajoint/djlabhub:${JHUB_VER}-py${PY_VER}-${DIST}-a7ee3ce
 
 ARG DEPLOY_KEY
 COPY --chown=anaconda $DEPLOY_KEY $HOME/.ssh/id_ed25519

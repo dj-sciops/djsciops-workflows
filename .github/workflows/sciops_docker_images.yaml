@@ -17,9 +17,6 @@ on:
       dist:
         required: true
         type: string
-      codebook_base_hash:
-        required: true
-        type: string
       workflow_version:
         required: true
         type: string
@@ -41,7 +38,6 @@ jobs:
       JHUB_VER: ${{inputs.jhub_ver}}
       PY_VER: ${{inputs.py_ver}}
       DIST: ${{inputs.dist}}
-      CODEBOOK_BASE_HASH: ${{inputs.codebook_base_hash}}
       WORKFLOW_VERSION: ${{inputs.workflow_version}}
     steps:
       - name: Checkout workflow repo
