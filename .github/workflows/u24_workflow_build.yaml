@@ -11,9 +11,6 @@ on:
       dist:
         required: true
         type: string
-      codebook_base_hash:
-        required: true
-        type: string
 jobs:
   test-changelog:
     runs-on: ubuntu-latest
@@ -45,7 +42,6 @@ jobs:
       JHUB_VER: ${{inputs.jhub_ver}}
       PY_VER: ${{inputs.py_ver}}
       DIST: ${{inputs.dist}}
-      CODEBOOK_BASE_HASH: ${{inputs.codebook_base_hash}}
     steps:
       - name: Checkout workflow repo
         uses: actions/checkout@v3
