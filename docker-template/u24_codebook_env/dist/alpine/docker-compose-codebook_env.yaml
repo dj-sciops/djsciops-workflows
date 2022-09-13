@@ -10,7 +10,6 @@ services:
         - JHUB_VER
         - PY_VER
         - DIST
-        - CODEBOOK_BASE_HASH
         - DEPLOY_KEY
         - REPO_OWNER
         - REPO_NAME
