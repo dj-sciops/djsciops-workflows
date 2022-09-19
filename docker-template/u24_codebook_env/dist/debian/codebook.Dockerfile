@@ -4,7 +4,7 @@
 ARG JHUB_VER
 ARG PY_VER
 ARG DIST
-FROM datajoint/djlabhub:${JHUB_VER}-py${PY_VER}-${DIST}-561b765
+FROM datajoint/djlabhub:${JHUB_VER}-py${PY_VER}-${DIST}-f970993
 
 RUN printf "git" >> /tmp/apt_requirements.txt && \
     /entrypoint.sh echo "installed"
