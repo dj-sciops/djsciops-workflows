@@ -22,8 +22,8 @@ RUN git clone https://github.com/${REPO_OWNER}/${REPO_NAME} && \
     pip install ./${REPO_NAME} && \
     cp -r ./${REPO_NAME}/notebooks/ /home && \
     cp -r ./${REPO_NAME}/images/ /home/notebooks/ || true && \
-    cp ./${REPO_NAME}/README.md /home/notebooks/ && \
     cp -r ./${REPO_NAME}/user_data/ /home || true && \
+    cp ./${REPO_NAME}/README.md /home/notebooks/ && \
     rm -rf /tmp/${REPO_NAME}
 
 WORKDIR /home

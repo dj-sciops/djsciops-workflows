@@ -21,7 +21,7 @@ RUN ssh-keyscan -t ed25519 github.com >> $HOME/.ssh/known_hosts && \
     git clone git@github.com:${REPO_OWNER}/${REPO_NAME}.git && \
     pip install ./${REPO_NAME} && \
     cp -r ./${REPO_NAME}/notebooks/ /home/ && \
-    cp -r ./${REPO_NAME}/images/ /home/notebooks/ && \
+    cp -r ./${REPO_NAME}/images/ /home/notebooks/ || true && \
     cp ./${REPO_NAME}/README.md /home/notebooks/ && \
     rm -rf /tmp/${REPO_NAME} && \
     rm -rf $HOME/.ssh/
