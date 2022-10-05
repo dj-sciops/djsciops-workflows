@@ -18,6 +18,8 @@ ARG REPO_NAME
 WORKDIR /tmp
 RUN ssh-keyscan -t ed25519 github.com >> $HOME/.ssh/known_hosts && \
     git clone git@github.com:${REPO_OWNER}/${REPO_NAME}.git && \
+    # Install jupyter widgets - pinned for iub-lulab
+	conda install -y -n base -c conda-forge "jupyterlab_widgets=1.1.1" "ipywidgets=7.7.1" "nodejs>=18" "plotly=5.7.0" && \
     pip install ./${REPO_NAME} && \
     cp -r ./${REPO_NAME}/notebooks/ /home/ && \
     cp -r ./${REPO_NAME}/images/ /home/notebooks/ || true && \
