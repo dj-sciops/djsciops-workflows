@@ -20,6 +20,9 @@ jobs:
       TWINE_REPO: ${{inputs.twine_repo}}
       TWINE_USERNAME: ${{secrets.TWINE_USERNAME}}
       TWINE_PASSWORD: ${{secrets.TWINE_PASSWORD}}
+      DOCKER_CLIENT_TIMEOUT: "120"
+      COMPOSE_HTTP_TIMEOUT: "120"
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Checkout element repo
         uses: actions/checkout@v3
@@ -137,3 +140,12 @@ jobs:
           else
             pip install twine && python -m twine upload ./dist/*
           fi
+      - name: Deploy docs
+        run: |
+          ELEMENT_HYPHENS=${GITHUB_REPOSITORY##*/}
+          ELEMENT_UNDERSCORES=${ELEMENT_HYPHENS//-/_}
+          export MODE=PUSH
+          export PACKAGE=${ELEMENT_UNDERSCORES}
+          export UPSTREAM_REPO=https://action-user:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git
+          export HOST_UID=$(id -u)
+          docker compose -f docs/docker-compose.yaml up --exit-code-from docs --build
