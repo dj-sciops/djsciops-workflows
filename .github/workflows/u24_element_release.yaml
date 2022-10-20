@@ -12,6 +12,8 @@ on:
         required: true
       TWINE_PASSWORD:
         required: true
+      GOOGLE_ANALYTICS_KEY: 
+        required: true
 jobs:
   publish-release:
     runs-on: ubuntu-latest
@@ -20,6 +22,7 @@ jobs:
       TWINE_REPO: ${{inputs.twine_repo}}
       TWINE_USERNAME: ${{secrets.TWINE_USERNAME}}
       TWINE_PASSWORD: ${{secrets.TWINE_PASSWORD}}
+      GOOGLE_ANALYTICS_KEY: ${{secrets.GOOGLE_ANALYTICS_KEY}}
       DOCKER_CLIENT_TIMEOUT: "120"
       COMPOSE_HTTP_TIMEOUT: "120"
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
