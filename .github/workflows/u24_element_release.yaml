@@ -129,6 +129,15 @@ jobs:
           threshold: 1s
         env:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+      - name: Deploy docs
+        run: |
+          ELEMENT_HYPHENS=${GITHUB_REPOSITORY##*/}
+          ELEMENT_UNDERSCORES=${ELEMENT_HYPHENS//-/_}
+          export MODE=PUSH
+          export PACKAGE=${ELEMENT_UNDERSCORES}
+          export UPSTREAM_REPO=https://action-user:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git
+          export HOST_UID=$(id -u)
+          docker compose -f docs/docker-compose.yaml up --exit-code-from docs --build
       - name: Publish pip release
         run: |
           if [ "${{env.TWINE_REPO}}" = "testpypi" ]
@@ -143,12 +152,3 @@ jobs:
           else
             pip install twine && python -m twine upload ./dist/*
           fi
-      - name: Deploy docs
-        run: |
-          ELEMENT_HYPHENS=${GITHUB_REPOSITORY##*/}
-          ELEMENT_UNDERSCORES=${ELEMENT_HYPHENS//-/_}
-          export MODE=PUSH
-          export PACKAGE=${ELEMENT_UNDERSCORES}
-          export UPSTREAM_REPO=https://action-user:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git
-          export HOST_UID=$(id -u)
-          docker compose -f docs/docker-compose.yaml up --exit-code-from docs --build
