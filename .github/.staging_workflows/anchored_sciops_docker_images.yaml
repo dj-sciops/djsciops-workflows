@@ -59,8 +59,7 @@ anchor-test-artifact-retention: &test-retention
 ### For Github Action run in dj-sciops
 anchor-prod-push: &prod-push
   if: |
-    github.event_name == 'push' &&
-    startsWith(github.ref, 'refs/tags') &&
+    ((github.event_name == 'push' && startsWith(github.ref, 'refs/tags')) || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push') || (github.event_name == 'workflow_dispatch')) &&
     github.repository_owner == 'dj-sciops'
 anchor-prod-cicd-repo: &prod-cicd-repo
   repository: 'dj-sciops/djsciops-cicd'

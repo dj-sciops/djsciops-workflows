@@ -12,8 +12,6 @@ on:
         required: true
       TWINE_PASSWORD:
         required: true
-      GOOGLE_ANALYTICS_KEY: 
-        required: true
 jobs:
   publish-release:
     runs-on: ubuntu-latest
@@ -22,7 +20,6 @@ jobs:
       TWINE_REPO: ${{inputs.twine_repo}}
       TWINE_USERNAME: ${{secrets.TWINE_USERNAME}}
       TWINE_PASSWORD: ${{secrets.TWINE_PASSWORD}}
-      GOOGLE_ANALYTICS_KEY: ${{secrets.GOOGLE_ANALYTICS_KEY}}
       DOCKER_CLIENT_TIMEOUT: "120"
       COMPOSE_HTTP_TIMEOUT: "120"
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -129,6 +126,15 @@ jobs:
           threshold: 1s
         env:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+      - name: Deploy docs
+        run: |
+          ELEMENT_HYPHENS=${GITHUB_REPOSITORY##*/}
+          ELEMENT_UNDERSCORES=${ELEMENT_HYPHENS//-/_}
+          export MODE=PUSH
+          export PACKAGE=${ELEMENT_UNDERSCORES}
+          export UPSTREAM_REPO=https://action-user:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git
+          export HOST_UID=$(id -u)
+          docker compose -f docs/docker-compose.yaml up --exit-code-from docs --build
       - name: Publish pip release
         run: |
           if [ "${{env.TWINE_REPO}}" = "testpypi" ]
@@ -143,12 +149,3 @@ jobs:
           else
             pip install twine && python -m twine upload ./dist/*
           fi
-      - name: Deploy docs
-        run: |
-          ELEMENT_HYPHENS=${GITHUB_REPOSITORY##*/}
-          ELEMENT_UNDERSCORES=${ELEMENT_HYPHENS//-/_}
-          export MODE=PUSH
-          export PACKAGE=${ELEMENT_UNDERSCORES}
-          export UPSTREAM_REPO=https://action-user:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git
-          export HOST_UID=$(id -u)
-          docker compose -f docs/docker-compose.yaml up --exit-code-from docs --build
