@@ -98,7 +98,7 @@ jobs:
           docker tag "${IMAGE}:${TAG}" "${IMAGE}:${TAG}-${GITHUB_SHA:0:7}"
           docker push "${IMAGE}:${TAG}-${GITHUB_SHA:0:7}"
           echo $PY_VER $DIST
-          [ "${PY_VER}" == "3.9" ] && [ "${DIST}" == "alpine" ] \
+          [ "${PY_VER}" == "3.9" ] && [ "${DIST}" == "debian" ] \
                   && docker tag "${IMAGE}:${TAG}" "${IMAGE}:latest" \
                   && docker push "${IMAGE}:latest" \
                   && echo "pushed 'latest' tag..." \
